@@ -42,8 +42,8 @@ exports.enrollPayer = async (req, res, next) => {
   let payer = req.body
   let validationResult = payerValidation(payer)
   let foundStatus = await payerExists(payer)
-  
-  if(foundStatus == 200) {
+
+  if (foundStatus == 200) {
     return res.status(400).json({
       success: false,
       message: "Payer already exists",
@@ -107,11 +107,11 @@ function payerValidation(payer) {
 async function payerExists(payer) {
   let email = payer.adm_email
   let storedHashedPassword = await login.getUser(email);
-  console.log('storedHashedPassword=',storedHashedPassword)
-  if(storedHashedPassword.status != 200 ) {
-    return res.status(500).json({status:500, message: 'Error checking password. Try again'})
+  console.log('storedHashedPassword=', storedHashedPassword)
+  if (storedHashedPassword.status != 200) {
+    return ({ status: 500, message: 'Error checking password. Try again' })
   } else {
-    return res.status(200).json({status:200, message: 'Administrator Exists'})
+    return ({ status: 200, message: 'Administrator Exists' })
   }
 
 }
