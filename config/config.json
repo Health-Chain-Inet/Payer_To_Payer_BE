@@ -1,0 +1,10 @@
+{
+    "dbhost": "p2phubserver.postgres.database.azure.com",
+    "dbport": 5432,
+    "dbuser": "p2phub",
+    "dbpassword": "Admin@1234",
+    "dbdatabase": "p2p",
+    "fromEmailUser":"sanchitjobs13@gmail.com",  
+    "fromEmailPass": "bgho ashf fgen rvtd",
+    "frontendurl": "http://localhost:5173"
+}
