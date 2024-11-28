@@ -69,8 +69,8 @@ main.post('/validatelogin', async(req, res) => {
   
       if (result) {
           // Password matches
-          req.session.userName = username
-          req.session.isAuthenticated = true
+        //   req.session.userName = username
+        //   req.session.isAuthenticated = true
           return res.status(200).json({status:200, message: storedHashedPassword.msg})
       } else {
           // Password does not match
