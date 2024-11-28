@@ -19,11 +19,7 @@ exports.validateLogin = async(req,res,next) => {
     return res.status(500).json({status:500, message: 'Error checking password. Try again'})
   }
   // Compare the entered password with the stored hash
-<<<<<<< HEAD
   bcrypt.compare(enteredPassword, storedHashedPassword.msg, (err, result) => {
-=======
-  bcrypt.compare(enteredPassword, storedHashedPassword.msg.adm_password, (err, result) => {
->>>>>>> 64db200899342fd38d66fb4398923e64765fda9f
     if (err) {
         console.error('Error comparing password', err);
         return res.status(401).json({status:401, message: 'UnAuthorized'})
@@ -33,11 +29,7 @@ exports.validateLogin = async(req,res,next) => {
         // Password matches
         req.session.userName = username
         req.session.isAuthenticated = true
-<<<<<<< HEAD
         return res.status(200).json({status:200, message: storedHashedPassword})
-=======
-        return res.status(200).json({status:200, message: storedHashedPassword.msg})
->>>>>>> 64db200899342fd38d66fb4398923e64765fda9f
     } else {
         // Password does not match
         return res.status(401).json({status:401, message: 'Invalid User/Password'})

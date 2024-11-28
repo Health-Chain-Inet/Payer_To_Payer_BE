@@ -50,7 +50,6 @@ main.use('/enroll', enrollmentRoutes);
 main.use('/verify', activateRoutes);
 // app.use('/discovery', discoveryRoutes);
 
-<<<<<<< HEAD
 main.post('/validatelogin', async(req, res) => {
     let username = req.body.username; 
     let enteredPassword = req.body.password; 
@@ -77,35 +76,6 @@ main.post('/validatelogin', async(req, res) => {
           // Password does not match
           return res.status(401).json({status:401, message: 'Invalid User/Password'})
       }
-=======
-main.post('/validatelogin', async (req, res) => {
-    let username = req.body.username;
-    let enteredPassword = req.body.password;
-    console.log("body", req.body)
-
-    let storedHashedPassword = await login.getUser(username);
-    console.log('storedHashedPassword=', storedHashedPassword)
-    if (storedHashedPassword.status != 200) {
-        return res.status(500).json({ status: 500, message: 'Error checking password. Try again' })
-    }
-    // Compare the entered password with the stored hash
-    bcrypt.compare(enteredPassword, storedHashedPassword.msg.adm_password, (err, result) => {
-        if (err) {
-            console.error('Error comparing password', err);
-            return res.status(401).json({ status: 401, message: 'UnAuthorized' })
-        }
-
-        if (result) {
-            // Password matches
-            req.session.userName = username
-            req.session.isAuthenticated = true
-
-            return res.status(200).json({ status: 200, message: storedHashedPassword.msg })
-        } else {
-            // Password does not match
-            return res.status(401).json({ status: 401, message: 'Invalid User/Password' })
-        }
->>>>>>> 64db200899342fd38d66fb4398923e64765fda9f
     });
 });
 
