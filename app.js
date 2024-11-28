@@ -59,6 +59,8 @@ main.post('/validatelogin', async(req, res) => {
     console.log('storedHashedPassword=',storedHashedPassword)
     if(storedHashedPassword.status != 200 ) {
       return res.status(500).json({status:500, message: 'Error checking password. Try again'})
+    } else if(storedHashedPassword.msg.active == false) {
+      return res.status(500).json({status:500, message: 'account not yet active'})
     }
     // Compare the entered password with the stored hash
     bcrypt.compare(enteredPassword, storedHashedPassword.msg.adm_password, (err, result) => {
