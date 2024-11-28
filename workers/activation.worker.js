@@ -22,7 +22,11 @@ if (parentPort) {
     const { actId, key } = workerData; // URL passed from the main thread
     checkActivation(actId, key)
         .then(data => {
-            parentPort.postMessage({ status: 'success', data }); // Send data back to the main thread
+            if(data.length > 0) {
+                parentPort.postMessage({ status: 'success', data }); // Send data back to the main thread
+            } else {
+                parentPort.postMessage({ status: 'error', data });
+            }
         })
         .catch(error => {
             console.log('errw=', error)
