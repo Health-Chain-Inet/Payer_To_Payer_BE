@@ -27,8 +27,8 @@ exports.validateLogin = async(req,res,next) => {
 
     if (result) {
         // Password matches
-        req.session.userName = username
-        req.session.isAuthenticated = true
+        // req.session.userName = username
+        // req.session.isAuthenticated = true
         return res.status(200).json({status:200, message: storedHashedPassword})
     } else {
         // Password does not match
@@ -41,6 +41,16 @@ exports.validateLogin = async(req,res,next) => {
 exports.enrollPayer = async(req, res,next) => {
   let payer = req.body
   let validationResult = payerValidation(payer)
+  let foundStatus = await payerExists(payer)
+  
+  if(foundStatus != 200) {
+    return res.status(400).json({
+      success: false,
+      message: "Payer already exists",
+      data: "Payer Already exists",
+    });
+  }
+
 
   if(validationResult.success) {
     let enrollResponse = await enroll.enroll(payer)
@@ -78,6 +88,8 @@ function payerValidation(payer) {
   msg += (payer.admEmail == '')? 'administrator email is required and should be valid':''
   msg += (payer.admPassword == '')? 'administrator password is required and should be valid':''
 
+
+
   if(msg == '') {
     return {
       'success':true, 
@@ -89,6 +101,19 @@ function payerValidation(payer) {
       'data': msg
     }
   }
+}
+
+
+async function payerExists(payer) {
+  let email  = payer.adm_email
+  let storedHashedPassword = await login.getUser(email);
+  console.log('storedHashedPassword=',storedHashedPassword)
+  if(storedHashedPassword.status != 200 ) {
+    return res.status(500).json({status:500, message: 'Error checking password. Try again'})
+  } else {
+    return res.status(200).json({status:200, message: 'Administrator Exists'})
+  }
+
 }
 
 async function sendEnrollerEmail(enrollAdminData) {

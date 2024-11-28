@@ -21,27 +21,27 @@ main.use(express.text());
 
 const PORT = process.env.PORT || 3001
 
-main.use(session({
-    secret: 'your-secret-key',        // Secret key for signing the session ID cookie
-    resave: false,                    // Don't save session if not modified
-    saveUninitialized: true,          // Save a new session even if it hasn't been modified
-    cookie: {
-        secure: true,                // Set to true if using HTTPS
-        httpOnly: true,               // Helps prevent XSS attacks
-        maxAge: 24 * 60    // Session expiration (1 day)
-    }
-}));
+// main.use(session({
+//     secret: 'your-secret-key',        // Secret key for signing the session ID cookie
+//     resave: false,                    // Don't save session if not modified
+//     saveUninitialized: true,          // Save a new session even if it hasn't been modified
+//     cookie: {
+//         secure: true,                // Set to true if using HTTPS
+//         httpOnly: true,               // Helps prevent XSS attacks
+//         maxAge: 24 * 60    // Session expiration (1 day)
+//     }
+// }));
 
 // Middleware to check if user info exists in the session
-const checkUserSession = (req, res, next) => {
-    if (req.session && req.session.userName) {
-        // If user session exists, continue to the next middleware or route
-        return next();
-    } else {
-        // If no user session, send a response or redirect
-        return res.status(401).send('User not logged in');
-    }
-};
+// const checkUserSession = (req, res, next) => {
+//     if (req.session && req.session.userName) {
+//         // If user session exists, continue to the next middleware or route
+//         return next();
+//     } else {
+//         // If no user session, send a response or redirect
+//         return res.status(401).send('User not logged in');
+//     }
+// };
 
 main.use('/directory', directoryRoutes);
 
