@@ -61,7 +61,7 @@ main.post('/validatelogin', async(req, res) => {
       return res.status(500).json({status:500, message: 'Error checking password. Try again'})
     }
     // Compare the entered password with the stored hash
-    bcrypt.compare(enteredPassword, storedHashedPassword.msg, (err, result) => {
+    bcrypt.compare(enteredPassword, storedHashedPassword.msg.adm_password, (err, result) => {
       if (err) {
           console.error('Error comparing password', err);
           return res.status(401).json({status:401, message: 'UnAuthorized'})

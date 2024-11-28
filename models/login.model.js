@@ -13,7 +13,7 @@ exports.getUser = async(username) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
-            return {status:200, msg: result.rows[0].adm_password}
+            return {status:200, msg: result.rows[0]}
         } else {
             return {status:404, msg: 'Username does not exist'} 
         }
