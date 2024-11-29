@@ -17,6 +17,7 @@ exports.uploadCertificate = async (req, res, next) => {
     const certPem = body.certcontent.certificate;
     const user = body.user;
     const email = body.email; 
+    const endpoint = body.endpoint;
     
     const cert = forge.pki.certificateFromPem(certPem);
     let payerdet = await directory_model.getPayerByEmail(email)
@@ -27,8 +28,18 @@ exports.uploadCertificate = async (req, res, next) => {
       certPem: certPem, 
       cert:cert, 
       payerdet: payerdet,  
+      endpoint: endpoint
     }
 
+    // console.log(pdata);
+
+    // res.json({
+    //   status:200,
+    //   message: 'File uploaded successfully',
+    //   data: pdata // Send the uploaded file's details in the response
+    // });
+
+    // return; 
 
 
 
@@ -202,7 +213,12 @@ async function endpointCreator(pdata) {
   endp.resource.extension[0].extension[1] = {};
   endp.resource.extension[0].extension[1].url  = "certificate";
   endp.resource.extension[0].extension[1].valueBase64Binary  = pdata.certPem;
-
+  endp.resource.name = "Payer-Payer Exchange";
+  endp.resource.status = "active";
+  endp.resource.managingOrganization =  {};
+  endp.resource.managingOrganization.identifier = {};
+  endp.resource.managingOrganization.identifier.value =   "Organization/"+endpId;
+  endp.resource.address = pdata.endpoint;
   return endp;
 
 
