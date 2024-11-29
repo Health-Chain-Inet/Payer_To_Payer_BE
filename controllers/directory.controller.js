@@ -138,6 +138,22 @@ exports.fetchAllPayers = async(req, res,next) => {
   }
 }
 
+exports.fetchSinglePayerByEmail =  async(req, res,next) => {
+  const body = req.body
+  const email = req.body.email 
+  try {
+     const payerdata = await directory_model.getPayerByEmailWithCertificate(email)
+     if(payerdata.status == 200) {
+      return res.status(200).json({status:200, message: payerdata.msg})
+     } else {
+      return res.status(200).json({status:500, message: 'Error fetching data'})
+     }
+  }  catch(err) {
+     return res.status(500).json({status:500, message: err})
+  }
+
+}
+
 
 
 async function bundleCreator(pdata) {

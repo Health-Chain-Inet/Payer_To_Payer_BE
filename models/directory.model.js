@@ -28,6 +28,31 @@ exports.getPayerByEmail= async(email) => {
     }
 }
 
+exports.getPayerByEmailWithCertificate= async(email) => {
+
+    const client  = await dbClient.getDbClient()
+    try {
+        let query = 'select p.*, a.* from payer_details as p left join administrators as a'
+        query += ' on p.payer_id = a.payer_id left join certificates c'
+        query += ' on c.adm_id = a.adm_id and c.payer_id = a.payer_id'
+        query += ' where a.adm_email = $1 order by c.created_date limit 1'
+        const values = [email]
+        client.connect()
+        const result = await client.query(query, values);
+        // Check if rows were affected
+        //console.log('result=', result)
+        if(result.rows.length > 0) {
+            return {status:200, msg: result.rows[0]}
+        } else {
+            return {status:404, msg: 'Email does not exist'} 
+        }
+    } catch(err) {
+        console.log('errac=', err)
+        return {status:500, msg: err} 
+    }
+}
+
+
 exports.getAllPayers= async() => {
 
     const client  = await dbClient.getDbClient()
@@ -49,6 +74,8 @@ exports.getAllPayers= async() => {
         return {status:500, msg: err} 
     }
 }
+
+
 
 exports.certificateSubmission  = async(tblcert) => {
     let payer_id = tblcert.payer_id;
