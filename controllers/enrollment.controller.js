@@ -16,7 +16,7 @@ exports.validateLogin = async (req, res, next) => {
   let storedHashedPassword = await login.getUser(username);
   console.log('storedHashedPassword=', storedHashedPassword)
   if (storedHashedPassword.status == 200) {
-    return res.status(500).json({ status: 500, message: 'Error checking password. Try again' })
+    return res.status(500).json({ status: 403, message: 'Payer Already exists' })
   }
   // Compare the entered password with the stored hash
   bcrypt.compare(enteredPassword, storedHashedPassword.msg.adm_password, (err, result) => {
@@ -42,41 +42,43 @@ exports.enrollPayer = async (req, res, next) => {
   let payer = req.body
   let validationResult = payerValidation(payer)
   let foundStatus = await payerExists(payer)
-
-  if (foundStatus == 200) {
+  console.log('foundstatus=', foundStatus)
+  if (foundStatus.status == 200) {
     return res.status(400).json({
       success: false,
       message: "Payer already exists",
       data: "Payer Already exists",
     });
-  }
-
-
-  if (validationResult.success) {
-    let enrollResponse = await enroll.enroll(payer)
-    if (enrollResponse.status == 200) {
-      let enrollAdminData = enrollResponse.data.adminResponse.rows[0]
-      await sendEnrollerEmail(enrollAdminData)
-
-      return res.status(200).json({
-        success: true,
-        message: "Payers Enrolled",
-        data: enrollResponse.data,
-      });
+  } else {
+    if (validationResult.success) {
+      let enrollResponse = await enroll.enroll(payer)
+      if (enrollResponse.status == 200) {
+        let enrollAdminData = enrollResponse.data.adminResponse.rows[0]
+        await sendEnrollerEmail(enrollAdminData)
+  
+        return res.status(200).json({
+          success: true,
+          message: "Payers Enrolled",
+          data: enrollResponse.data,
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: "Error in Payer Enrollment",
+          data: enrollResponse.data,
+        });
+      }
     } else {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: "Error in Payer Enrollment",
-        data: enrollResponse.data,
+        message: "Bad Request",
+        data: validationResult.data,
       });
     }
-  } else {
-    return res.status(400).json({
-      success: false,
-      message: "Bad Request",
-      data: validationResult.data,
-    });
   }
+
+
+
 }
 
 function payerValidation(payer) {
@@ -107,11 +109,11 @@ function payerValidation(payer) {
 async function payerExists(payer) {
   let email = payer.adm_email
   let storedHashedPassword = await login.getUser(email);
-  console.log('storedHashedPassword=', storedHashedPassword)
+  console.log('storedHashedPassword1', storedHashedPassword)
   if (storedHashedPassword.status != 200) {
-    return ({ status: 500, message: 'Error checking password. Try again' })
+    return { status: 500, message: 'Error checking password. Try again' }
   } else {
-    return ({ status: 200, message: 'Administrator Exists' })
+    return { status: 200, message: 'Administrator Exists' }
   }
 
 }

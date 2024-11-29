@@ -1,6 +1,16 @@
 
 const { Worker } = require('worker_threads') 
 
+
+
+
+
+exports.uploadCertificate = async (req, res, next) => {
+  console.log('reqbody=', req.file)
+  return res.status(200).json({status:200, message: req.file})
+}
+
+
 exports.fetchPayers = async (req, res,next) => {
   try {
     let url = 'https://jsonplaceholder.typicode.com/todos/'
@@ -45,4 +55,6 @@ async function fetchService(workerData) {
 
   }) 
 } 
+
+
 
