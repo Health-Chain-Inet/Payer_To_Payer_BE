@@ -8,6 +8,7 @@ const router = express.Router()
 
 //router.get('/', directoryController.startPage)  // Login and registration
 router.get('/fetchPayers', directoryController.fetchPayers)
+router.get('/fetchAllPayers', directoryController.fetchAllPayers)
 router.post('/uploadCertificate',   directoryController.uploadCertificate)
 
 

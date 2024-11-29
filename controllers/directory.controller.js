@@ -114,6 +114,21 @@ exports.fetchPayers = async (req, res,next) => {
 }
 
 
+exports.fetchAllPayers = async(req, res,next) => {
+  try {
+    let payers  = await directory_model.getAllPayers();
+    if(payers.status == 200) {
+      return res.status(200).json({status:200, message: payers.msg})
+    } else {
+      return res.status(500).json({status:500, message: 'Payers not found'})
+    }
+  } catch(err) {
+    return res.status(500).json({status:500, message: err})
+  }
+}
+
+
+
 async function bundleCreator(pdata) {
   let bundle = {};
   let bundleId = removeSpecialChars(pdata.email)
