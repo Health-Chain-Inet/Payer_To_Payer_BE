@@ -26,6 +26,44 @@ exports.getPayerByEmail= async(email) => {
         console.log('errac=', err)
         return {status:500, msg: err} 
     }
-    
+}
+
+exports.certificateSubmission  = async(tblcert) => {
+    let payer_id = tblcert.payer_id;
+    let adm_id = tblcert.adm_id;
+    let bundle_id = tblcert.bundle_id; 
+    let validity_notbefore = tblcert.validity_notbefore;
+    let validity_notafter = tblcert.validity_notafter;
+    let created_date = Date.now().toString();
+
+    let certquery = "";
+    certquery += "insert into Certificates(payer_id, adm_id, bundle_id, validity_notbefore,validity_notafter, created_date) "
+    certquery += "values('"+payer_id+"','"+adm_id+"','"+bundle_id+"','"+validity_notbefore+"',"
+    certquery += "'"+validity_notafter+"','"+created_date+"')";
+
+    let updateQuery = "";
+    updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
+    const values = [true, adm_id, payer_id]
+    const client  = await dbClient.getDbClient()
+    try {
+        client.connect();
+        // Begin the transaction
+        await client.query('BEGIN'); 
+        console.log('Transaction started.')
+        const certIngest =  await client.query(certquery);
+        const certUpdate = await client.query(updateQuery, values);
+        await client.query('COMMIT');
+        console.log('Transaction committed successfully.');
+        return {'status':200, 'data':{'certificate':certIngest , 'adminResponse':certUpdate}} 
+    }
+    catch(err) {
+        console.error('Error occurred during transaction:', err)
+        // if(client) {
+        //     await client.query('ROLLBACK')
+        // }
+        console.log('Transaction rolled back.')
+        return {status:500, data:err}
+    }
+
 
 }

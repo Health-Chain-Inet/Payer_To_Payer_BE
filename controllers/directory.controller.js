@@ -29,6 +29,9 @@ exports.uploadCertificate = async (req, res, next) => {
       payerdet: payerdet,  
     }
 
+
+
+
     let bundle = await bundleCreator(pdata);
     // console.log(JSON.stringify(bundle));
     //console.log(pdata)
@@ -39,8 +42,17 @@ exports.uploadCertificate = async (req, res, next) => {
 
     // Send POST request with custom headers
     await axios.post(cf.fhirbaseurl + 'Bundle?_format=json', bundle)
-    .then(response => {
+    .then(async(response) => {
       console.log('Data received from server:', response.data);
+      const tblCertificate = {
+          payer_id : payerdet.msg.payer_id,
+          adm_id : payerdet.msg.adm_id,
+          bundle_id : response.data.id,
+          validity_notbefore : cert.validity.notBefore,
+          validity_notafter : cert.validity.notAfter,
+      }
+      let dbUpdate = await directory_model.certificateSubmission(tblCertificate);
+      console.log(dbUpdate);
       res.json({
         status:200,
         message: 'File uploaded successfully',
