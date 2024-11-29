@@ -5,11 +5,11 @@ const session = require('express-session');
 const login = require('./models/login.model.js')
 const bcrypt = require('bcrypt');
 
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
+// const multer = require('multer');
+// const fs = require('fs');
+// const path = require('path');
 
-const forge = require('node-forge');
+//const forge = require('node-forge');
 
 
   
@@ -96,74 +96,74 @@ main.post('/validatelogin', async (req, res) => {
 
 
 // Create a storage configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        console.log('re1=', file)
-      // Specify the directory where we want to store the uploaded files
-      const uploadDir = 'uploads/';
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         console.log('re1=', file)
+//       // Specify the directory where we want to store the uploaded files
+//       const uploadDir = 'uploads/';
       
-      // Create the directory if it does not exist
-      if (!fs.existsSync(uploadDir)){
-        fs.mkdirSync(uploadDir);
-      }
+//       // Create the directory if it does not exist
+//       if (!fs.existsSync(uploadDir)){
+//         fs.mkdirSync(uploadDir);
+//       }
   
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        // Use custom filename from the request body with file extension
-        console.log('re2=', file.fieldname)
-        const customFileName = file.fieldname
-          ? `${file.fieldname}${path.extname(file.originalname)}`
-          : `user-upload-${Date.now()}${path.extname(file.originalname)}`;
+//       cb(null, uploadDir);
+//     },
+//     filename: (req, file, cb) => {
+//         // Use custom filename from the request body with file extension
+//         console.log('re2=', file.fieldname)
+//         const customFileName = file.fieldname
+//           ? `${file.fieldname}${path.extname(file.originalname)}`
+//           : `user-upload-${Date.now()}${path.extname(file.originalname)}`;
         
-        cb(null, customFileName);
-      }
-  });
+//         cb(null, customFileName);
+//       }
+//   });
 
   
   
 
-    // Initialize multer
-    const upload = multer({ storage: storage });
+//     // Initialize multer
+//     const upload = multer({ storage: storage });
 
     // POST route to handle file uploads
-    main.post('/uploadcertificate', (req, res) => {
-    console.log('rebody=', req.body)
-    const body = JSON.parse(req.body)
-    const certPem = body.certcontent.certificate;
-    // if (!req.file) {
-    //   return res.status(400).json({ error: 'No file uploaded' });
-    // }
-    const cert = forge.pki.certificateFromPem(certPem);
-      // Step 3: Extract information from the certificate
-    console.log('Subject:', cert.subject.attributes);
-    console.log('Issuer:', cert.issuer.attributes);
-    console.log('Serial Number:', cert.serialNumber);
-    console.log('Not Before:', cert.validity.notBefore);
-    console.log('Not After:', cert.validity.notAfter);
-    console.log('Public Key Algorithm:', cert.publicKey.algorithm);
-    console.log('Public Key:', forge.pki.publicKeyToPem(cert.publicKey));
+  //   main.post('/uploadcertificate', (req, res) => {
+  //     console.log('rebody=', req.body)
+  //     const body = JSON.parse(req.body)
+  //     const certPem = body.certcontent.certificate;
+  //     // if (!req.file) {
+  //     //   return res.status(400).json({ error: 'No file uploaded' });
+  //     // }
+  //     const cert = forge.pki.certificateFromPem(certPem);
+  //       // Step 3: Extract information from the certificate
+  //     console.log('Subject:', cert.subject.attributes);
+  //     console.log('Issuer:', cert.issuer.attributes);
+  //     console.log('Serial Number:', cert.serialNumber);
+  //     console.log('Not Before:', cert.validity.notBefore);
+  //     console.log('Not After:', cert.validity.notAfter);
+  //     console.log('Public Key Algorithm:', cert.publicKey.algorithm);
+  //     console.log('Public Key:', forge.pki.publicKeyToPem(cert.publicKey));
 
-    const extensions = cert.extensions;
+  //     const extensions = cert.extensions;
 
-    if (extensions && extensions.length > 0) {
-        extensions.forEach(ext => {
-          console.log('Extension:', ext);
-        });
-      } else {
-        console.log('No extensions found.');
-      }
+  //     if (extensions && extensions.length > 0) {
+  //         extensions.forEach(ext => {
+  //           console.log('Extension:', ext);
+  //         });
+  //       } else {
+  //         console.log('No extensions found.');
+  //       }
 
-    // Optionally: You can also verify the certificate using forge (for example, check if it's self-signed)
-    // const isSelfSigned = cert.isSelfSigned();
-    console.log('Is Self-Signed:', cert)
+  //     // Optionally: You can also verify the certificate using forge (for example, check if it's self-signed)
+  //     // const isSelfSigned = cert.isSelfSigned();
+  //     console.log('Is Self-Signed:', cert)
 
   
-    res.json({
-      message: 'File uploaded successfully',
-      file: req.body // Send the uploaded file's details in the response
-    });
-  });
+  //   res.json({
+  //     message: 'File uploaded successfully',
+  //     file: req.body // Send the uploaded file's details in the response
+  //   });
+  // });
 
 //   main.post('/uploadcertificate', upload.fields([
 //     { name: 'certificate', maxCount: 1 }

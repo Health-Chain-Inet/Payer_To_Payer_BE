@@ -6,5 +6,6 @@
     "dbdatabase": "p2p",
     "fromEmailUser":"sanchitjobs13@gmail.com",  
     "fromEmailPass": "bgho ashf fgen rvtd",
-    "frontendurl": "http://localhost:5173"
+    "frontendurl": "http://localhost:5173",
+    "fhirbaseurl": "http://localhost:8080/fhir/" 
 }
