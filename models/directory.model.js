@@ -65,7 +65,7 @@ exports.getAllPayers= async() => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
-            return {status:200, msg: result.rows[0]}
+            return {status:200, msg: result.rows}
         } else {
             return {status:404, msg: 'No Payers found'} 
         }
