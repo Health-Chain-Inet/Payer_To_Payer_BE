@@ -32,7 +32,7 @@ exports.getPayerByEmailWithCertificate= async(email) => {
 
     const client  = await dbClient.getDbClient()
     try {
-        let query = 'select p.*, a.* from payer_details as p left join administrators as a'
+        let query = 'select p.*, a.*, c.* from payer_details as p left join administrators as a'
         query += ' on p.payer_id = a.payer_id left join certificates c'
         query += ' on c.adm_id = a.adm_id and c.payer_id = a.payer_id'
         query += ' where a.adm_email = $1 order by c.created_date limit 1'
