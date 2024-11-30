@@ -133,7 +133,7 @@ async function sendEnrollerEmail(enrollAdminData) {
     msg += 'Dear Sir/Madam,<br/>'
     msg += 'Your Account User ' + enrollAdminData.adm_email + ' needs activation.<br/>'
     msg += 'To activate your account, please click on the link below <br/>'
-    msg += '<a target="_blank" rel="noopener noreferrer" href="http://localhost:3001/verify/verify?key="' + enrollAdminData.activate_key + '"&actId="' + enrollAdminData.adm_id + '">'
+    msg += '<a target="_blank" rel="noopener noreferrer" href="http://localhost:3001/verify/verify?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '">'
     //msg += 'http://localhost:3001/verify/verify?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '</a><br/><br/><br/>'
     msg += 'http://localhost:5173/activation?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '</a><br/><br/><br/>'
     msg += 'Regards, <br/><br/>'
