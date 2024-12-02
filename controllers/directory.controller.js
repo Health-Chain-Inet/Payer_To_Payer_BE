@@ -33,44 +33,35 @@ exports.uploadCertificate = async (req, res, next) => {
       endpoint: endpoint
     }
 
-    // console.log(pdata);
-
-    // res.json({
-    //   status:200,
-    //   message: 'File uploaded successfully',
-    //   data: pdata // Send the uploaded file's details in the response
-    // });
-
-    // return; 
-
-
-
     let bundle = await bundleCreator(pdata);
-    // console.log(JSON.stringify(bundle));
-    //console.log(pdata)
-
-    // headers = {
-    //   'Content-Type': 'application/json'
-    // }
 
     // Send POST request with custom headers
     await axios.post(cf.fhirbaseurl + 'Bundle?_format=json', bundle)
     .then(async(response) => {
-      console.log('Data received from server:', response.data);
-      const tblCertificate = {
-          payer_id : payerdet.msg.payer_id,
-          adm_id : payerdet.msg.adm_id,
-          bundle_id : response.data.id,
-          validity_notbefore : cert.validity.notBefore,
-          validity_notafter : cert.validity.notAfter,
+      if(response.status == 200 || response.status == 201 || response.status == 202 || response.status == 203 || response.status == 204){
+        console.log('Data received from server:', response);
+        const tblCertificate = {
+            payer_id : payerdet.msg.payer_id,
+            adm_id : payerdet.msg.adm_id,
+            bundle_id : response.data.id,
+            validity_notbefore : cert.validity.notBefore,
+            validity_notafter : cert.validity.notAfter
+        }
+        let dbUpdate = await directory_model.certificateSubmission(tblCertificate);
+        console.log(dbUpdate);
+        res.json({
+          status:200,
+          message: 'File uploaded successfully',
+          data: response.data // Send the uploaded file's details in the response
+        });
+      } else {
+        res.json({
+          status:200,
+          message: 'Certificate is not uploaded',
+          data: 'Certificate is not uplaoded' // Send the uploaded file's details in the response
+        });
       }
-      let dbUpdate = await directory_model.certificateSubmission(tblCertificate);
-      console.log(dbUpdate);
-      res.json({
-        status:200,
-        message: 'File uploaded successfully',
-        data: response.data // Send the uploaded file's details in the response
-      });
+
     })
     .catch(error => {
       console.log('Request failed:', error);
