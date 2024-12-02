@@ -11,6 +11,9 @@ router.get('/fetchPayers', directoryController.fetchPayers)
 router.get('/fetchAllPayers', directoryController.fetchAllPayers)
 router.post('/uploadCertificate',   directoryController.uploadCertificate)
 router.post('/fetchPayerByEmail',   directoryController.fetchSinglePayerByEmail)
+router.post('/fetchcertificatedetails', directoryController.fetchCertificateDetails)
+
+router.post('/downloadcertificate', directoryController.downloadCertificate)
 
 
 

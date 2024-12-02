@@ -20,6 +20,8 @@ exports.uploadCertificate = async (req, res, next) => {
     const endpoint = body.endpoint;
     
     const cert = forge.pki.certificateFromPem(certPem);
+    console.log(cert);
+
     let payerdet = await directory_model.getPayerByEmail(email)
 
     let pdata = {
@@ -109,6 +111,27 @@ exports.uploadCertificate = async (req, res, next) => {
 
 }
 
+exports.downloadCertificate = async (req,res, next) => {
+  let body = req.body;
+  const user = body.user;
+  const email = body.email; 
+  const payerdet = await directory_model.getPayerByEmailWithCertificate(email);
+  if(payerdet.status == 200) {
+    const bundle_id = payerdet.msg.bundle_id; 
+    console.log('bundle_id=', bundle_id);
+    await axios.get(cf.fhirbaseurl + 'Bundle/'+bundle_id+'?_format=json')
+    .then((response)=> {
+      return res.status(200).json({status:200, message: response})
+    })
+    .catch((err)=>{
+      return res.status(404).json({status:500, message: 'Certificate not uploaded'}) 
+    })
+   
+  } else {
+    return res.status(404).json({status:500, message: 'No data available'}) 
+  }
+}
+
 
 exports.fetchPayers = async (req, res,next) => {
   try {
@@ -152,6 +175,22 @@ exports.fetchSinglePayerByEmail =  async(req, res,next) => {
      return res.status(500).json({status:500, message: err})
   }
 
+}
+
+exports.fetchCertificateDetails = async(req, res, next) => {
+  const body = req.body
+  const email = req.body.email 
+  try {
+    const cdetails = await directory_model.fetchCertificateDetails(email);
+    console.log('cdetails=', cdetails);
+    if(cdetails.status == 200) {
+     return res.status(200).json({status:200, message: cdetails.msg})
+    } else {
+     return res.status(404).json({status:404, message: []})
+    }
+ }  catch(err) {
+    return res.status(500).json({status:500, message: err})
+ }
 }
 
 

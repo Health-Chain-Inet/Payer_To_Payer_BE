@@ -76,6 +76,32 @@ exports.getAllPayers= async() => {
 }
 
 
+exports.fetchCertificateDetails = async(email) => {
+    const client  = await dbClient.getDbClient()
+    try {
+        let query = 'select c.*, p.*, a.*  from Certificates as c left join administrators as a'
+        query += ' on c.payer_id = a.payer_id and c.adm_id = a.adm_id  left join payer_details as p'
+        query += ' on  a.payer_id = p.payer_id '
+        query += ' where a.adm_email = $1'
+        //console.log('query=', query);
+        const values = [email]
+        client.connect()
+        const result = await client.query(query, values);
+
+        // Check if rows were affected
+        //console.log('result=', result)
+        if(result.rows.length > 0) {
+            return {status:200, msg: result.rows}
+        } else {
+            return {status:404, msg: 'Email does not exist'} 
+        }
+    } catch(err) {
+        console.log('errac=', err)
+        return {status:500, msg: err} 
+    }
+
+}
+
 
 exports.certificateSubmission  = async(tblcert) => {
     let payer_id = tblcert.payer_id;
@@ -84,11 +110,14 @@ exports.certificateSubmission  = async(tblcert) => {
     let validity_notbefore = tblcert.validity_notbefore;
     let validity_notafter = tblcert.validity_notafter;
     let created_date = Date.now().toString();
+    let certificate_uploaded = true; 
+    let certificate_verified = false; 
 
     let certquery = "";
-    certquery += "insert into Certificates(payer_id, adm_id, bundle_id, validity_notbefore,validity_notafter, created_date) "
+    certquery += "insert into Certificates(payer_id, adm_id, bundle_id, validity_notbefore,validity_notafter, created_date, "
+    certquery += " certificate_uploaded, certificate_verified)"
     certquery += "values('"+payer_id+"','"+adm_id+"','"+bundle_id+"','"+validity_notbefore+"',"
-    certquery += "'"+validity_notafter+"','"+created_date+"')";
+    certquery += "'"+validity_notafter+"','"+created_date+"', '"+certificate_uploaded+"','"+certificate_verified+"')";
 
     let updateQuery = "";
     updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
