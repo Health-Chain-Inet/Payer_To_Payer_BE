@@ -113,7 +113,6 @@ exports.uploadCertificate = async (req, res, next) => {
 
 exports.downloadCertificate = async (req,res, next) => {
   let body = req.body;
-  const user = body.user;
   const email = body.email; 
   const payerdet = await directory_model.getPayerByEmailWithCertificate(email);
   if(payerdet.status == 200) {
@@ -121,10 +120,37 @@ exports.downloadCertificate = async (req,res, next) => {
     console.log('bundle_id=', bundle_id);
     await axios.get(cf.fhirbaseurl + 'Bundle/'+bundle_id+'?_format=json')
     .then((response)=> {
-      return res.status(200).json({status:200, message: response})
+      if(response.status == 200) {
+        // certificatedata = extensioninner[k]
+
+        // let entries  =response.data.entry; 
+        // let certificatedata;
+        let certificatedata = response.data
+        // for(let i=0; i< entries.length;i++) {
+        //   if(entries[i].resource.resourceType == 'Endpoint') {
+        //     let extensionouter = entries[i].resource.extension; 
+        //      for(let j=0;j<extensionouter.length;j++) {
+        //       if('extension' in extensionouter[j]) {
+        //         let extensioninner =  extensionouter[j];
+        //         for(let k=0;k<extensioninner.length;k++) {
+        //           // if(extensionouter[j].extension.url == 'certificate') {
+        //           //   certificatedata = certificatedata.extensionouter.extension[j].valueBase64Binary;
+        //           // }
+        //         }
+        //       }
+
+        //     }
+        //   }
+        // }
+        return res.status(200).json({status:200, message: certificatedata})
+      } else {
+        return res.status(404).json({status:404, message: []})
+
+      }
     })
     .catch((err)=>{
-      return res.status(404).json({status:500, message: 'Certificate not uploaded'}) 
+      console.log('error=', err);
+      return res.status(404).json({status:500, message: []}) ;
     })
    
   } else {
