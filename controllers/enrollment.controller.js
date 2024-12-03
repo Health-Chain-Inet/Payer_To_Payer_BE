@@ -130,12 +130,22 @@ async function sendEnrollerEmail(enrollAdminData) {
     });
 
     let msg = ''
+    let key = enrollAdminData.activate_key
+    let admid = enrollAdminData.adm_id
+    let link = 'http://localhost:5173/activation?key=' + key + '&actId=' +admid
     msg += 'Dear Sir/Madam,<br/>'
     msg += 'Your Account User ' + enrollAdminData.adm_email + ' needs activation.<br/>'
     msg += 'To activate your account, please click on the link below <br/>'
-    msg += '<a target="_blank" rel="noopener noreferrer" href="http://localhost:5173/activation?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '">'
+    // Here is the form and button that will try to open the link on click
+    // msg += '<form action="' + link + '" method="get" target="_blank">';
+    // msg += '<button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Activate Account</button>';
+    // msg += '</form>';
+    msg += '<a target="_blank" rel="noopener noreferrer" href="http://localhost:5173/activation?key=' + key + '&actId=' + admid + '">'
+    msg += 'Click here to Activate'
+    msg += '</a>'
+    msg += '<br /> <br />'
     //msg += 'http://localhost:3001/verify/verify?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '</a><br/><br/><br/>'
-    msg += 'http://localhost:5173/activation?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '</a><br/><br/><br/>'
+    //msg += 'http://localhost:5173/activation?key=' + enrollAdminData.activate_key + '&actId=' + enrollAdminData.adm_id + '</a><br/><br/><br/>'
     msg += 'Regards, <br/><br/>'
     msg += 'Administrator <br/><br/>'
     msg += 'Health Chain'
