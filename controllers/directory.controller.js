@@ -5,6 +5,8 @@ const directory_model = require('../models/directory.model');
 const moment = require('moment-timezone');
 const axios = require('axios');
 const cf = require('../config/config.json')
+const crt = require('../CA/ca')
+
 
 
 function removeSpecialChars(str) {
@@ -34,6 +36,7 @@ exports.uploadCertificate = async (req, res, next) => {
     }
 
     let bundle = await bundleCreator(pdata);
+
 
     // Send POST request with custom headers
     await axios.post(cf.fhirbaseurl + 'Bundle?_format=json', bundle)
@@ -114,25 +117,25 @@ exports.downloadCertificate = async (req,res, next) => {
       if(response.status == 200) {
         // certificatedata = extensioninner[k]
 
-        // let entries  =response.data.entry; 
-        // let certificatedata;
-        let certificatedata = response.data
-        // for(let i=0; i< entries.length;i++) {
-        //   if(entries[i].resource.resourceType == 'Endpoint') {
-        //     let extensionouter = entries[i].resource.extension; 
-        //      for(let j=0;j<extensionouter.length;j++) {
-        //       if('extension' in extensionouter[j]) {
-        //         let extensioninner =  extensionouter[j];
-        //         for(let k=0;k<extensioninner.length;k++) {
-        //           // if(extensionouter[j].extension.url == 'certificate') {
-        //           //   certificatedata = certificatedata.extensionouter.extension[j].valueBase64Binary;
-        //           // }
-        //         }
-        //       }
-
-        //     }
-        //   }
-        // }
+        let entries = response.data.entry; 
+        let certificatedata;
+        //let certificatedata = response.data
+        for(let i=0; i< entries.length;i++) {
+          if(entries[i].resource.resourceType == 'Endpoint') {
+            let extensionouter = entries[i].resource.extension; 
+             for(let j=0;j<extensionouter.length;j++) {
+              //certificatedata = extensionouter[j]
+              if('extension' in extensionouter[j]) {
+                extinner = extensionouter[j]['extension'];
+                for(let k=0;k<extinner.length;k++) {
+                  if(extinner[k]['url'] == 'certificate') {
+                    certificatedata = extinner[k].valueBase64Binary;
+                  }
+                }
+              }
+            }
+          }
+        }
         return res.status(200).json({status:200, message: certificatedata})
       } else {
         return res.status(404).json({status:404, message: []})
@@ -148,6 +151,39 @@ exports.downloadCertificate = async (req,res, next) => {
     return res.status(404).json({status:500, message: 'No data available'}) 
   }
 }
+
+
+exports.createCertificate = async (req,res,next) => {
+  let body = req.body;
+  const email = body.email; 
+
+  let payerdet = await directory_model.getPayerByEmail(email)
+
+  console.log('payerdet=', payerdet);
+
+  if(payerdet.status == 200) {
+    let msg = payerdet.msg; 
+    let cert = await crt.generateCert(msg)
+
+
+    
+    res.json({
+      status:200,
+      message: msg,
+      data: cert // Send the uploaded file's details in the response
+    });
+  } else {
+    res.json({
+      status:500,
+      message: 'payer not found',
+      data: 'unknown error payer not found' // Send the uploaded file's details in the response
+    });
+  }
+
+
+
+}
+
 
 
 exports.fetchPayers = async (req, res,next) => {
@@ -209,6 +245,7 @@ exports.fetchCertificateDetails = async(req, res, next) => {
     return res.status(500).json({status:500, message: err})
  }
 }
+
 
 
 
@@ -278,13 +315,45 @@ async function endpointCreator(pdata) {
   endp.resource.identifier[0].value = endpId;
   endp.resource.extension = [];
   endp.resource.extension[0] = {};
+  endp.resource.extension[1] = {};
+  endp.resource.extension[2] = {};
+  endp.resource.extension[3] = {};
+
   endp.resource.extension[0].extension = [];
+  endp.resource.extension[1].extension = [];
+  endp.resource.extension[2].extension = [];
+  endp.resource.extension[3].extension = [];
+
   endp.resource.extension[0].extension[0] = {};
-  endp.resource.extension[0].extension[0].url  = "secureExchangeArtifactsType";
-  endp.resource.extension[0].extension[0].valueString  =  "mtls Public Certificate";
-  endp.resource.extension[0].extension[1] = {};
-  endp.resource.extension[0].extension[1].url  = "certificate";
-  endp.resource.extension[0].extension[1].valueBase64Binary  = pdata.certPem;
+  endp.resource.extension[1].extension[0] = {};
+  endp.resource.extension[2].extension[0] = {};
+  endp.resource.extension[3].extension[0] = {};
+
+  endp.resource.extension[0].url = "http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-endpoint-usecase";
+  endp.resource.extension[1].url = "http://hl7.org/fhir/us/ndh/StructureDefinition/base-ext-igsSupported";
+  
+  endp.resource.extension[0].extension[0].url = "endpointUsecasetype";
+  endp.resource.extension[0].extension[0].valueCodeableConcept = {};
+  endp.resource.extension[0].extension[0].valueCodeableConcept.coding = [];
+  endp.resource.extension[0].extension[0].valueCodeableConcept.coding[0] = {};
+  endp.resource.extension[0].extension[0].valueCodeableConcept.coding[0].system = "http://terminology.hl7.org/CodeSystem/v3-ActReason";
+  endp.resource.extension[0].extension[0].valueCodeableConcept.coding[0].code = "HOPERAT";
+  endp.resource.extension[0].extension[0].valueCodeableConcept.coding[0].display = "healthcare operations";
+
+  endp.resource.extension[1].extension[0].url = "igsSupportedType";
+  endp.resource.extension[1].extension[0].valueCodeableConcept = {};
+  endp.resource.extension[1].extension[0].valueCodeableConcept.coding = [];
+  endp.resource.extension[1].extension[0].valueCodeableConcept.coding[0] = {};
+  endp.resource.extension[1].extension[0].valueCodeableConcept.coding[0].system = "http://hl7.org/fhir/us/ndh/CodeSystem/IgTypeCS";
+  endp.resource.extension[1].extension[0].valueCodeableConcept.coding[0].code = "FHIR";
+  endp.resource.extension[1].extension[0].valueCodeableConcept.coding[0].display = "FHIR";
+
+
+  endp.resource.extension[2].extension[0].url  = "secureExchangeArtifactsType";
+  endp.resource.extension[2].extension[0].valueString  =  "mtls Public Certificate";
+
+  endp.resource.extension[3].extension[0].url  = "certificate";
+  endp.resource.extension[3].extension[0].valueBase64Binary  = pdata.certPem;
   endp.resource.name = "Payer-Payer Exchange";
   endp.resource.status = "active";
   endp.resource.managingOrganization =  {};

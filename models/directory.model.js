@@ -106,22 +106,27 @@ exports.fetchCertificateDetails = async(email) => {
 exports.certificateSubmission  = async(tblcert) => {
     let payer_id = tblcert.payer_id;
     let adm_id = tblcert.adm_id;
+    let email = tblcert.adm_email;
     let bundle_id = tblcert.bundle_id; 
     let validity_notbefore = tblcert.validity_notbefore;
     let validity_notafter = tblcert.validity_notafter;
     let created_date = Date.now().toString();
     let certificate_uploaded = true; 
     let certificate_verified = false; 
+    let cert_type = tblcert.cert_type;
+    let certificate_uploaded_adm = (cert_type == 'client')?false: true;
+    let org_id = (cert_type == 'client')?'': tblcert.org_id;
+    let endpoint_id = (cert_type == 'client')?'': tblcert.endpoint_id;
 
     let certquery = "";
-    certquery += "insert into Certificates(payer_id, adm_id, bundle_id, validity_notbefore,validity_notafter, created_date, "
-    certquery += " certificate_uploaded, certificate_verified)"
-    certquery += "values('"+payer_id+"','"+adm_id+"','"+bundle_id+"','"+validity_notbefore+"',"
-    certquery += "'"+validity_notafter+"','"+created_date+"', '"+certificate_uploaded+"','"+certificate_verified+"')";
+    certquery += "insert into Certificates(payer_id, adm_id, email, validity_notbefore,validity_notafter, created_date, "
+    certquery += " certificate_uploaded, certificate_verified, cert_type, org_id, endp_id)"
+    certquery += "values('"+payer_id+"','"+adm_id+"','"+email+"','"+validity_notbefore+"','"+validity_notafter+"','"+created_date+"',"
+    certquery += "'"+certificate_uploaded+"','"+certificate_verified+"','"+cert_type+"','"+org_id+"','"+endpoint_id+"')";
 
     let updateQuery = "";
     updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
-    const values = [true, adm_id, payer_id]
+    const values = [certificate_uploaded_adm, adm_id, payer_id]
     const client  = await dbClient.getDbClient()
     try {
         client.connect();

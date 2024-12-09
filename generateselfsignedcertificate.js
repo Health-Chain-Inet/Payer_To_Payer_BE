@@ -50,8 +50,8 @@ const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
 const certPem = forge.pki.certificateToPem(cert);
 
 // Optionally save these files to disk
-fs.writeFileSync('./files/private_key.pem', privateKeyPem);
-fs.writeFileSync('./files/certificate.pem', certPem);
+fs.writeFileSync('./certs/private_key.pem', privateKeyPem);
+fs.writeFileSync('./certs/certificate.pem', certPem);
 
 console.log('Certificate and private key generated');
 
