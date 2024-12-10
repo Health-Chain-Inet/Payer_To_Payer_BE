@@ -6,6 +6,9 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const cf = require('../config/config.json')
 const crt = require('../CA/ca')
+const projectRoot = process.cwd();
+const fs = require('fs');
+
 
 
 
@@ -181,6 +184,32 @@ exports.createCertificate = async (req,res,next) => {
   }
 
 
+
+}
+
+exports.validateClientCertificate = async(req,res,next) => {
+  let payer_id = req.query.payer_id;
+  console.log('payerid=',payer_id);
+  // const clientcert = await directory_model.getCertificateByPayerId(payer_id);
+  // console.log('clientcert=',clientcert);
+  const clientfile = projectRoot + '\\uploads\\' + payer_id +'\\client-cert-'+payer_id+'.pem';
+  const cafile = projectRoot + '\\certs\\ca-cert.pem';
+  let caCertPem = fs.readFileSync(cafile, 'utf8');
+  caCertPem = caCertPem.replaceAll("\r","");
+  caCertPem = caCertPem.replaceAll("\n",""); 
+  let clientCertPem = fs.readFileSync(clientfile, 'utf8');
+  clientCertPem = clientCertPem.replaceAll("\r","");
+  clientCertPem = clientCertPem.replaceAll("\n",""); 
+
+
+
+  const response = await crt.validateCertificate(clientCertPem.toString(), caCertPem.toString())
+   
+    res.json({
+      status:200,
+      message: 'client certificate',
+      data: clientCertPem // Send the uploaded file's details in the response
+    });
 
 }
 

@@ -50,6 +50,36 @@ exports.generateCert = async(msg) => {
     }
 }
 
+
+
+exports.validateCertificate = async(certPem, caCertPem) =>  {
+    const cert = forge.pki.certificateFromPem(certPem);
+    const caCert = forge.pki.certificateFromPem(caCertPem);
+  
+    // Simulate certificate validation against a CA's trusted root certificate
+    const verified = cert.verify(caCert);
+    
+    if (verified) {
+      console.log('Certificate is valid and trusted by the CA.');
+      return 'Certificate is Valid'
+    } else {
+      console.log('Certificate validation failed. It is not trusted by the CA.');
+      return 'Certificate is not Valid'
+    }
+  
+    // Check for specific SAN fields as part of a Trust Framework policy
+    const sanExtension = cert.getExtension('subjectAltName');
+    if (sanExtension) {
+      sanExtension.altNames.forEach((altName) => {
+        if (altName.value.includes('payerId')) {
+          console.log('Custom SAN field "payerId" found:', altName.value);
+        }
+      });
+    } else {
+      console.log('No Subject Alternative Name extension found.');
+    }
+  }
+
 async function generateCA(caCertfilePath,caKeyfilePath) {
     caCert.publicKey = caKeys.publicKey;
     caCert.serialNumber = '01';
@@ -126,7 +156,6 @@ async function getCACert() {
     }
 
 }
-
 
 async function generateServerCert(msg, certca) {
     try {
@@ -331,8 +360,6 @@ async function generateClientCert(msg, certca) {
     }
 }
 
-
-
 async function organizationCreator(msg) {
     let org = {};
     let orgId = msg.payer_id; 
@@ -381,7 +408,7 @@ async function organizationCreator(msg) {
     return fhirdata;
 }
   
-  async function endpointCreator(msg) {
+async function endpointCreator(msg) {
     let endp = { };
     let endpId = msg.payer_id;
     endp.fullUrl = "Endpoint/"+endpId;
@@ -460,4 +487,5 @@ async function organizationCreator(msg) {
   return fhirdata;
   
 }
+
   

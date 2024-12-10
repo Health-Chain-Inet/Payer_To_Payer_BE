@@ -150,3 +150,25 @@ exports.certificateSubmission  = async(tblcert) => {
 
 
 }
+
+
+exports.getCertificateByPayerId = async(payer_id) => {
+    const client  = await dbClient.getDbClient()
+    try {
+        let query = `select * from certificates where payer_id=$1 and cert_type=$2`
+        const values = [payer_id, 'server']
+        client.connect()
+        const result = await client.query(query, values);
+        // Check if rows were affected
+        //console.log('result=', result)
+        if(result.rows.length > 0) {
+            return {status:200, msg: result.rows}
+        } else {
+            return {status:404, msg: 'No Payers found'} 
+        }
+    } catch(err) {
+        console.log('errac=', err)
+        return {status:500, msg: err} 
+    }
+
+}
