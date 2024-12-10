@@ -238,15 +238,24 @@ exports.validateServerCertificate = async(req,res,next) => {
               });
           }
       });
-
+      serverCertPem = '-----BEGIN CERTIFICATE-----'+serverCertPem+'-----END CERTIFICATE-----'
       //console.log(serverCertPem)
       const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
       console.log(response)
-      res.json({
-        status:200,
-        message: 'server certificate',
-        data: response // Send the uploaded file's details in the response
-      });
+      if(response.status == 200) {
+        res.json({
+          status:200,
+          message: 'server certificate',
+          data: response // Send the uploaded file's details in the response
+        });
+      } else {
+        res.json({
+          status:500,
+          message: 'server certificate error',
+          data: response // Send the uploaded file's details in the response
+        });  
+      }
+
     }).catch((err)=>{
       console.log('err=',err)
       res.json({

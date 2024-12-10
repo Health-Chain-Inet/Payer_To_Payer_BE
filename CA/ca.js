@@ -56,9 +56,8 @@ exports.validateCertificate = async(certPem, caCertPem) =>  {
         console.log('certPem=', certPem);
 
         const cert = forge.pki.certificateFromPem(certPem);
+        console.log('cert=', cert);
         const caCert = forge.pki.certificateFromPem(caCertPem);
-    
-        console.log('cert=', cert.issuer.attributes);
         console.log('cacert=', caCert.subject.attributes);
       
         // Simulate certificate validation against a CA's trusted root certificate
