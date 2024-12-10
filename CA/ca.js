@@ -253,14 +253,19 @@ async function generateServerCert(msg, certca) {
         fs.writeFileSync(serverCertfilePath,servercertPem);
         fs.writeFileSync(serverKeyfilePath, privateKeyPem);
         const cert = forge.pki.certificateFromPem(servercertPem.toString());
-        //console.log('servercertPem', servercertPem);
-        msg.certPem = servercertPem;
+        console.log('servercertPem', servercertPem);
+        const certBase64 = servercertPem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n/g, '');
+        // const base64Certificate = Buffer.from(certBase64, 'utf8').toString('base64');
+        // console.log('Base64 Certificate (padded):', base64Certificate);
+
+
+        msg.certPem = certBase64;
         msg.endpoint = 'https://localhost:3001/directory/payer/?pid='+msg.payer_id
         //console.log('nsg',msg.certPem);
         const org = await organizationCreator(msg);
-        console.log('org=', org)
+        //console.log('org=', org)
         if(org.status==200){
-            const endp = await endpointCreator(msg, servercertPem);
+            const endp = await endpointCreator(msg, certBase64);
             if(endp.status == 200) {
                 const tblCertificate = {
                     payer_id : msg.payer_id,
@@ -444,7 +449,7 @@ async function organizationCreator(msg) {
     // org.resource.endpoint = [];
     // org.resource.endpoint[0] = {};
     // org.resource.endpoint[0].reference = "Endpoint/endpoint-"+orgId;
-    console.log('orgr=', org)
+   // console.log('orgr=', org)
     const headers =  {
         'Content-Type': 'application/fhir+json' // Ensure correct content type for FHIR
     }
@@ -527,7 +532,7 @@ async function endpointCreator(msg, servercertPem) {
     const headers =  {
         'Content-Type': 'application/fhir+json' // Ensure correct content type for FHIR
     }
-    let fhirdata = await axios.put(cf.fhirbaseurl + 'Endpoint/endpoint-'+endpId, endp.resource, {headers:headers})
+    let fhirdata = await axios.put(cf.fhirbaseurl + 'Endpoint/endpoint-'+endpId, endp.resource)
     .then(async(response) => {
         return {
             status: 200,

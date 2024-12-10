@@ -210,50 +210,51 @@ exports.validateClientCertificate = async(req,res,next) => {
 
 exports.validateServerCertificate = async(req,res,next) => {
   let payer_id = req.query.payer_id;
-  const serverfile = projectRoot + '\\uploads\\' + payer_id +'\\server-cert-'+payer_id+'.pem';
+  //const serverfile = projectRoot + '\\uploads\\' + payer_id +'\\server-cert-'+payer_id+'.pem';
   const cafile = projectRoot + '\\certs\\ca-cert.pem';
   const fhirurl = cf.fhirbaseurl + '/Endpoint/endpoint-'+payer_id;
   try {
     let caCertPem = fs.readFileSync(cafile, 'utf8');
-    let serverCertPem = fs.readFileSync(serverfile, 'utf8');
-    const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
+    //let serverCertPem = fs.readFileSync(serverfile, 'utf8');
+    //const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
      
-    res.json({
-      status:200,
-      message: 'client certificate',
-      data: response // Send the uploaded file's details in the response
-    });
+    // res.json({
+    //   status:200,
+    //   message: 'client certificate',
+    //   data: response // Send the uploaded file's details in the response
+    // });
 
-    // axios.get(fhirurl).then(async(result)=>{
-    //   let extn = result.data.extension;
-    //   let serverCertPem = '';
-    //   // Iterate through each item in the 'data' array
-    //   extn.forEach(item => {
-    //       // Check if the URL is present and certificate information exists in extensions
-    //       if (item.extension) {
-    //           item.extension.forEach(e => {
-    //               if (e.url === "certificate" && e.valueBase64Binary) {
-    //                 serverCertPem = e.valueBase64Binary;
-    //               }
-    //           });
-    //       }
-    //   });
+    axios.get(fhirurl).then(async(result)=>{
+      let extn = result.data.extension;
+      let serverCertPem = '';
+      // Iterate through each item in the 'data' array
+      extn.forEach(item => {
+          // Check if the URL is present and certificate information exists in extensions
+          if (item.extension) {
+              item.extension.forEach(e => {
+                  if (e.url === "certificate" && e.valueBase64Binary) {
+                    serverCertPem = e.valueBase64Binary;
+                  }
+              });
+          }
+      });
 
-    //   console.log(serverCertPem)
-    //   const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
-    //   res.json({
-    //     status:200,
-    //     message: 'server certificate',
-    //     data: response // Send the uploaded file's details in the response
-    //   });
-    // }).catch((err)=>{
-    //   console.log('err=',err)
-    //   res.json({
-    //     status:404,
-    //     message: 'server certificate error',
-    //     data: err // Send the uploaded file's details in the response
-    //   });
-    // })
+      //console.log(serverCertPem)
+      const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
+      console.log(response)
+      res.json({
+        status:200,
+        message: 'server certificate',
+        data: response // Send the uploaded file's details in the response
+      });
+    }).catch((err)=>{
+      console.log('err=',err)
+      res.json({
+        status:404,
+        message: 'server certificate error',
+        data: err // Send the uploaded file's details in the response
+      });
+    })
      
 
   }
