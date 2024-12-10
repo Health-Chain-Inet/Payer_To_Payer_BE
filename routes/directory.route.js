@@ -15,6 +15,7 @@ router.post('/fetchcertificatedetails', directoryController.fetchCertificateDeta
 router.post('/generatecertificate', directoryController.createCertificate)
 router.post('/downloadcertificate', directoryController.downloadCertificate)
 router.get('/validateclient', directoryController.validateClientCertificate)
+router.get('/validateserver', directoryController.validateServerCertificate)
 
 
 

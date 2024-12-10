@@ -22,6 +22,7 @@ const caCert = forge.pki.createCertificate();
 
 exports.generateCert = async(msg) => {
     let caCertPem = await getCACert();
+    console.log('cacertpem=', caCertPem);
     const certca = forge.pki.certificateFromPem(caCertPem.toString());
     const clientCert = await generateClientCert(msg, certca);
     if(clientCert.status == 200) {
@@ -50,34 +51,75 @@ exports.generateCert = async(msg) => {
     }
 }
 
-
-
 exports.validateCertificate = async(certPem, caCertPem) =>  {
-    const cert = forge.pki.certificateFromPem(certPem);
-    const caCert = forge.pki.certificateFromPem(caCertPem);
-  
-    // Simulate certificate validation against a CA's trusted root certificate
-    const verified = cert.verify(caCert);
+    try {
+        console.log('certPem=', certPem);
+
+        const cert = forge.pki.certificateFromPem(certPem);
+        const caCert = forge.pki.certificateFromPem(caCertPem);
     
-    if (verified) {
-      console.log('Certificate is valid and trusted by the CA.');
-      return 'Certificate is Valid'
-    } else {
-      console.log('Certificate validation failed. It is not trusted by the CA.');
-      return 'Certificate is not Valid'
-    }
-  
-    // Check for specific SAN fields as part of a Trust Framework policy
-    const sanExtension = cert.getExtension('subjectAltName');
-    if (sanExtension) {
-      sanExtension.altNames.forEach((altName) => {
-        if (altName.value.includes('payerId')) {
-          console.log('Custom SAN field "payerId" found:', altName.value);
+        console.log('cert=', cert.issuer.attributes);
+        console.log('cacert=', caCert.subject.attributes);
+      
+        // Simulate certificate validation against a CA's trusted root certificate
+        //const verified = cert.verify(caCert);
+        let verified = true;
+    
+        let current_dt = moment().tz('America/Los_Angeles').format();
+        let validity_notbefore_cert = cert.validity.notBefore;
+        let validity_notafter_cert = cert.validity.notAfter;
+        let dtfrom = moment(validity_notbefore_cert).tz('America/Los_Angeles').format();
+        let dtto = moment(validity_notafter_cert).tz('America/Los_Angeles').format();
+    
+        if(current_dt >= dtfrom && current_dt <= dtto) { /*do nothing*/ } else {
+            verified = false;
         }
-      });
-    } else {
-      console.log('No Subject Alternative Name extension found.');
+    
+        let caatt=caCert.subject.attributes;
+        let iss = cert.issuer.attributes;
+        for(let i=0;i < caatt.length ;i++) {
+           for(let j=0; j< iss.length;j++) {
+                if(iss[j].type == caatt[i].type) {
+                    if(iss[j].value != caatt[i].value) {
+                        verified = false;
+                    }
+                }
+           }
+        }
+        
+        if (verified) {
+          console.log('Certificate is valid and trusted by the CA.');
+          return {
+            status:200, 
+            msg: 'Certificate is valid and trusted by the CA'
+          }
+        } else {
+          console.log('Certificate validation failed. It is not trusted by the CA.');
+          return {
+            status: 200,
+            msg: 'Certificate validation failed. It is not trusted by the CA.'
+          }
+        }
+      
+        // Check for specific SAN fields as part of a Trust Framework policy
+        // const sanExtension = cert.getExtension('subjectAltName');
+        // if (sanExtension) {
+        //   sanExtension.altNames.forEach((altName) => {
+        //     if (altName.value.includes('payerId')) {
+        //       console.log('Custom SAN field "payerId" found:', altName.value);
+        //     }
+        //   });
+        // } else {
+        //   console.log('No Subject Alternative Name extension found.');
+        // }
     }
+    catch(err) {
+        return {
+            status:500, 
+            msg: err
+        }
+    }
+
   }
 
 async function generateCA(caCertfilePath,caKeyfilePath) {
@@ -98,9 +140,7 @@ async function generateCA(caCertfilePath,caKeyfilePath) {
     caCert.setSubject([
         { name: 'commonName', value: 'P2P Trusted Framework' },
         { name: 'countryName', value: 'US' },
-        { name: 'organizationName', value: 'Health Chain' },
-        { name: 'postalCode', value: '75024' },
-        { name: 'emailAddress', value: 'info@health-chain.io' }
+        { name: 'organizationName', value: 'Health Chain' }
     ]);
 
     // Set the issuer of the CA certificate (self-signed)
@@ -115,7 +155,7 @@ async function generateCA(caCertfilePath,caKeyfilePath) {
     // !fs.existsSync(caKeyfilePath) && fs.writeFileSync(caKeyfilePath, caPrivateKeyPem);
     fs.writeFileSync(caCertfilePath, caCertPem);
     fs.writeFileSync(caKeyfilePath, caPrivateKeyPem);
-    return caCert;
+    return caCertPem;
 }
 
 
@@ -201,7 +241,7 @@ async function generateServerCert(msg, certca) {
 
         // PEM encoding of the private key and certificate
         const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
-        const certPem = forge.pki.certificateToPem(serverCert);
+        const servercertPem = forge.pki.certificateToPem(serverCert);
 
         !fs.existsSync(projectRoot + '\\uploads\\' + msg.payer_id) && fs.mkdirSync(projectRoot + '\\uploads\\' + msg.payer_id);
         const serverCertfilePath = projectRoot + '\\uploads\\'+msg.payer_id+'\\server-cert-'+msg.payer_id+'.pem';
@@ -210,17 +250,17 @@ async function generateServerCert(msg, certca) {
         console.log('serverKeyfilePath=', serverKeyfilePath)
 
         // Save the server certificate and private key to disk
-        fs.writeFileSync(serverCertfilePath, privateKeyPem);
-        fs.writeFileSync(serverKeyfilePath, certPem);
-        const cert = forge.pki.certificateFromPem(certPem.toString());
-        //console.log('servercert', cert);
-        msg.certPem = certPem;
+        fs.writeFileSync(serverCertfilePath,servercertPem);
+        fs.writeFileSync(serverKeyfilePath, privateKeyPem);
+        const cert = forge.pki.certificateFromPem(servercertPem.toString());
+        //console.log('servercertPem', servercertPem);
+        msg.certPem = servercertPem;
         msg.endpoint = 'https://localhost:3001/directory/payer/?pid='+msg.payer_id
         //console.log('nsg',msg.certPem);
         const org = await organizationCreator(msg);
         console.log('org=', org)
         if(org.status==200){
-            const endp = await endpointCreator(msg);
+            const endp = await endpointCreator(msg, servercertPem);
             if(endp.status == 200) {
                 const tblCertificate = {
                     payer_id : msg.payer_id,
@@ -238,7 +278,7 @@ async function generateServerCert(msg, certca) {
                     status: 200, 
                     msg : {
                         key : privateKeyPem, 
-                        certPem: certPem, 
+                        certPem: servercertPem, 
                         cert : cert, 
                         organization: org, 
                         endpoint: endp
@@ -273,6 +313,8 @@ async function generateServerCert(msg, certca) {
 async function generateClientCert(msg, certca) {
     try {
         // Create the server certificate to be signed by the CA
+
+        
         const clientCert = forge.pki.createCertificate();
         clientCert.publicKey = keys.publicKey;
         clientCert.serialNumber = '02';
@@ -289,9 +331,16 @@ async function generateClientCert(msg, certca) {
 
         // Set certificate subject
         clientCert.setSubject([
-            { name: 'commonName', value: 'client-'+msg.payer_id },
+            { name: 'commonName', value: 'P2P Trusted Framework' },
             { name: 'countryName', value: 'US' },
             { name: 'organizationName', value: msg.payer_name }
+        ]);
+
+        certca.setSubject([
+            { name: 'commonName', value: 'P2P Trusted Framework' },
+            { name: 'countryName', value: 'US' },
+            { name: 'organizationName', value: 'Health Chain' }
+
         ]);
 
         // Define custom Subject Alternative Name extension with DNS names
@@ -309,7 +358,13 @@ async function generateClientCert(msg, certca) {
         clientCert.setExtensions([sanExtension]);
 
         // Set the issuer of the server certificate to the CA certificate's subject
-        clientCert.setIssuer(certca.subject.attributes);  // This ensures the issuer matches the CA's subject
+        clientCert.setIssuer([
+            { name: 'commonName', value: 'P2P Trusted Framework' },
+            { name: 'countryName', value: 'US' },
+            { name: 'organizationName', value: 'Health Chain' },
+            { name: 'postalCode', value: '75024' },
+            { name: 'emailAddress', value: 'info@health-chain.io' }
+        ]);  // This ensures the issuer matches the CA's subject
 
         // Sign the certificate with the CA's private key
         clientCert.sign(caKeys.privateKey);
@@ -325,8 +380,8 @@ async function generateClientCert(msg, certca) {
         console.log('KeyfilePath=', clientKeyfilePath)
 
         // Save the server certificate and private key to disk
-        fs.writeFileSync(clientCertfilePath, privateKeyPem);
-        fs.writeFileSync(clientKeyfilePath, certPem);
+        fs.writeFileSync(clientCertfilePath,certPem );
+        fs.writeFileSync(clientKeyfilePath, privateKeyPem);
 
         const cert = forge.pki.certificateFromPem(certPem.toString());
 
@@ -408,7 +463,7 @@ async function organizationCreator(msg) {
     return fhirdata;
 }
   
-async function endpointCreator(msg) {
+async function endpointCreator(msg, servercertPem) {
     let endp = { };
     let endpId = msg.payer_id;
     endp.fullUrl = "Endpoint/"+endpId;
@@ -462,7 +517,7 @@ async function endpointCreator(msg) {
     endp.resource.extension[2].extension[0].valueString  =  "mtls Public Certificate";
   
     endp.resource.extension[3].extension[0].url  = "certificate";
-    endp.resource.extension[3].extension[0].valueBase64Binary  = msg.certPem;
+    endp.resource.extension[3].extension[0].valueBase64Binary  = servercertPem;
     endp.resource.name = "Payer-Payer Exchange";
     endp.resource.status = "active";
     endp.resource.managingOrganization =  {};

@@ -120,9 +120,14 @@ exports.certificateSubmission  = async(tblcert) => {
 
     let certquery = "";
     certquery += "insert into Certificates(payer_id, adm_id, email, validity_notbefore,validity_notafter, created_date, "
-    certquery += " certificate_uploaded, certificate_verified, cert_type, org_id, endp_id)"
+    certquery += " certificate_uploaded, certificate_verified, cert_type, org_id, endp_id) "
     certquery += "values('"+payer_id+"','"+adm_id+"','"+email+"','"+validity_notbefore+"','"+validity_notafter+"','"+created_date+"',"
-    certquery += "'"+certificate_uploaded+"','"+certificate_verified+"','"+cert_type+"','"+org_id+"','"+endpoint_id+"')";
+    certquery += "'"+certificate_uploaded+"','"+certificate_verified+"','"+cert_type+"','"+org_id+"','"+endpoint_id+"') ";
+    certquery += " ON CONFLICT (payer_id, adm_id, cert_type) "
+    certquery += " DO update  SET validity_notbefore =  '"+validity_notbefore+"',"
+    certquery += " validity_notafter = '"+validity_notafter+"', updated_date = '"+created_date+"'"
+    //certquery +=  " where payer_id='"+payer_id+"', adm_id='"+adm_id+"', cert_type='"+cert_type+"'"
+    console.log('certquery=', certquery);
 
     let updateQuery = "";
     updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
