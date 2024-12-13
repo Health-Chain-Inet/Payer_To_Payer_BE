@@ -57,8 +57,10 @@ exports.getAllPayers= async() => {
 
     const client  = await dbClient.getDbClient()
     try {
-        let query = 'select p.*, a.* from payer_details as p left join administrators as a'
-        query +=     ' on p.payer_id = a.payer_id where a.active=$1'
+        let query = "select p.*, a.*, (select count(*) from certificates where payer_id=p.payer_id and "
+        query +=  " certificate_verified='true') as certificates_verified_count "
+        query += " from payer_details as p left join administrators as a"
+        query +=  " on p.payer_id = a.payer_id where a.active=$1"
         const values = [true]
         client.connect()
         const result = await client.query(query, values);
@@ -79,7 +81,7 @@ exports.getAllPayers= async() => {
 exports.fetchCertificateDetails = async(email) => {
     const client  = await dbClient.getDbClient()
     try {
-        let query = 'select c.*, p.*, a.*  from Certificates as c left join administrators as a'
+        let query = 'select c.*, p.*, a.adm_id, a.adm_name,a.adm_email, a.adm_phone  from Certificates as c left join administrators as a'
         query += ' on c.payer_id = a.payer_id and c.adm_id = a.adm_id  left join payer_details as p'
         query += ' on  a.payer_id = p.payer_id '
         query += ' where a.adm_email = $1'
@@ -176,4 +178,25 @@ exports.getCertificateByPayerId = async(payer_id) => {
         return {status:500, msg: err} 
     }
 
+}
+
+exports.updateValidation = async(verified, payer_id, cert_type) => {
+    let updateQuery = "";
+    updateQuery = "update certificates set certificate_verified=$1 where payer_id=$2 and cert_type=$3"
+    const values = [verified, payer_id, cert_type]
+    const client  = await dbClient.getDbClient()
+    try{
+        client.connect();
+        // Begin the transaction
+        await client.query('BEGIN'); 
+        console.log('Transaction started.')
+        const certUpdate = await client.query(updateQuery, values);
+        await client.query('COMMIT');
+        console.log('Transaction committed successfully.');
+        return {'status':200, 'data':certUpdate}
+    }
+    catch(err) {
+        console.log('Transaction rolled back.',err)
+        return {status:500, data:err}
+    }
 }

@@ -156,7 +156,7 @@ exports.downloadCertificate = async (req,res, next) => {
 exports.createCertificate = async (req,res,next) => {
   let body = req.body;
   const email = body.email; 
-
+  console.log('email:', email)
   let payerdet = await directory_model.getPayerByEmail(email)
 
   console.log('payerdet=', payerdet);
@@ -192,7 +192,7 @@ exports.validateClientCertificate = async(req,res,next) => {
     let caCertPem = fs.readFileSync(cafile, 'utf8');
     let clientCertPem = fs.readFileSync(clientfile, 'utf8');
     const response = await crt.validateCertificate(clientCertPem.toString(), caCertPem.toString())
-     
+    await directory_model.updateValidation(true, payer_id,'client')
     res.json({
       status:200,
       message: 'client certificate',
@@ -243,6 +243,7 @@ exports.validateServerCertificate = async(req,res,next) => {
       const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
       console.log(response)
       if(response.status == 200) {
+        await directory_model.updateValidation(true, payer_id,'server')
         res.json({
           status:200,
           message: 'server certificate',

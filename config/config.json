@@ -7,5 +7,6 @@
     "fromEmailUser":"sanchitjobs13@gmail.com",  
     "fromEmailPass": "bgho ashf fgen rvtd",
     "frontendurl": "http://localhost:5173",
+    "backendurl": "http://localhost:3001",
     "fhirbaseurl": "http://localhost:8080/fhir/" 
 }

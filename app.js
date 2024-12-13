@@ -34,7 +34,8 @@ main.use('/directory', directoryRoutes);
 main.use('/certificate', directoryRoutes);
 main.use('/enroll', enrollmentRoutes);
 main.use('/verify', activateRoutes);
-// app.use('/discovery', discoveryRoutes);
+main.use('/discovery', discoveryRoutes);
+
 main.post('/validatelogin', async (req, res) => {
     let username = req.body.username;
     let enteredPassword = req.body.password;

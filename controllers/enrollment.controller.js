@@ -40,6 +40,7 @@ exports.validateLogin = async (req, res, next) => {
 
 exports.enrollPayer = async (req, res, next) => {
   let payer = req.body
+  console.log('enrolpayerdata=',payer)
   let validationResult = payerValidation(payer)
   let foundStatus = await payerExists(payer)
   console.log('foundstatus=', foundStatus)
@@ -170,5 +171,4 @@ async function sendEnrollerEmail(enrollAdminData) {
   catch (emailErr) {
     console.log('EmailErr= ', emailErr)
   }
-
 }

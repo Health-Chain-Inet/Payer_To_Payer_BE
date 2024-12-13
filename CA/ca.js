@@ -20,36 +20,6 @@ const caKeys = forge.pki.rsa.generateKeyPair(2048);
 // Create a self-signed root CA certificate
 const caCert = forge.pki.createCertificate();
 
-exports.generateCert = async(msg) => {
-    let caCertPem = await getCACert();
-    console.log('cacertpem=', caCertPem);
-    const certca = forge.pki.certificateFromPem(caCertPem.toString());
-    const clientCert = await generateClientCert(msg, certca);
-    if(clientCert.status == 200) {
-        const serverCert = await generateServerCert(msg, certca);
-        if(serverCert.status == 200) {
-            return {
-                status: 200, 
-                msg : {
-                    caCert: certca, 
-                    serverCert: serverCert,  
-                    clientCert: clientCert
-                }
-            }
-        } else {
-            return {
-                status: 500, 
-                msg : 'Error generating server certificate'
-            }      
-        }
-
-    } else {
-        return {
-            status: 500, 
-            msg : 'Error generating client certificate'
-        }   
-    }
-}
 
 exports.validateCertificate = async(certPem, caCertPem) =>  {
     try {
@@ -119,7 +89,38 @@ exports.validateCertificate = async(certPem, caCertPem) =>  {
         }
     }
 
-  }
+}
+
+exports.generateCert = async(msg) => {
+    let caCertPem = await getCACert();
+    console.log('cacertpem=', caCertPem);
+    const certca = forge.pki.certificateFromPem(caCertPem.toString());
+    const clientCert = await generateClientCert(msg, certca);
+    if(clientCert.status == 200) {
+        const serverCert = await generateServerCert(msg, certca);
+        if(serverCert.status == 200) {
+            return {
+                status: 200, 
+                msg : {
+                    caCert: certca, 
+                    serverCert: serverCert,  
+                    clientCert: clientCert
+                }
+            }
+        } else {
+            return {
+                status: 500, 
+                msg : 'Error generating server certificate'
+            }      
+        }
+
+    } else {
+        return {
+            status: 500, 
+            msg : 'Error generating client certificate'
+        }   
+    }
+}
 
 async function generateCA(caCertfilePath,caKeyfilePath) {
     caCert.publicKey = caKeys.publicKey;
