@@ -241,7 +241,7 @@ exports.validateServerCertificate = async(req,res,next) => {
       serverCertPem = '-----BEGIN CERTIFICATE-----'+serverCertPem+'-----END CERTIFICATE-----'
       //console.log(serverCertPem)
       const response = await crt.validateCertificate(serverCertPem.toString(), caCertPem.toString())
-      console.log(response)
+      console.log('fhir response=',response)
       if(response.status == 200) {
         await directory_model.updateValidation(true, payer_id,'server')
         res.json({
