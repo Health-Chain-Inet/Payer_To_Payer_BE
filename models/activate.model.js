@@ -45,7 +45,7 @@ async function activatePayer(actId, key) {
         // console.log('key=',key)
         const query = 'UPDATE administrators SET active = $1 WHERE adm_id = $2 and activate_key = $3'
         const values = [true, actId, key]
-        client.connect()
+        await client.connect()
         const result = await client.query(query, values);
         // console.log('result= ',result)
         // Check if rows were affected
@@ -57,6 +57,8 @@ async function activatePayer(actId, key) {
     } catch(err) {
         console.log('errac=', err)
         return 0
+    } finally {
+        client.close();
     }
 }
     
@@ -65,7 +67,7 @@ async function activatePayer(actId, key) {
 async function checkActivation(actId, key) {
     const client  = await dbClient.getDbClient()
     try {
-      client.connect()
+      await client.connect()
 
       const query = 'SELECT * FROM administrators WHERE adm_id = $1 and activate_key = $2';
       const values = [actId, key]; // Parameterized value
@@ -73,6 +75,8 @@ async function checkActivation(actId, key) {
       return result.rows; // Return the data fetched
     } catch(err) {
         throw new Error(`Error fetching data: ${error.message}`);
+    } finally {
+        client.close()
     }
 }
 

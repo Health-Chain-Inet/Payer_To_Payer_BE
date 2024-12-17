@@ -115,7 +115,7 @@ exports.enroll = async(payer) => {
         await client.query('COMMIT');
         console.log('Transaction committed successfully.');
         //return adminResponse
-
+        client.end();
          return {'status':200, 'data':{'payerResponse':payerResponse , 'adminResponse':adminResponse}} 
         
     } catch(err) {

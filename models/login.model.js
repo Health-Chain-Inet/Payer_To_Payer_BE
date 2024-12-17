@@ -13,14 +13,16 @@ exports.getUser = async(username) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            client.end();
             return {status:200, msg: result.rows[0]}
         } else {
+            client.end();
             return {status:404, msg: 'Username does not exist'} 
         }
     } catch(err) {
         console.log('errac=', err)
         return {status:500, msg: err} 
-    }
+    } 
     
 
 }

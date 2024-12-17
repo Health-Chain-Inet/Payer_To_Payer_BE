@@ -18,14 +18,16 @@ exports.getPayerByEmail= async(email) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            await client.end();
             return {status:200, msg: result.rows[0]}
         } else {
+            await client.end();
             return {status:404, msg: 'Email does not exist'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('getPayerByEmail=', err)
         return {status:500, msg: err} 
-    }
+    } 
 }
 
 exports.getPayerByEmailWithCertificate= async(email) => {
@@ -42,14 +44,16 @@ exports.getPayerByEmailWithCertificate= async(email) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            await client.end();
             return {status:200, msg: result.rows[0]}
         } else {
+            await client.end();
             return {status:404, msg: 'Email does not exist'} 
         }
     } catch(err) {
         console.log('errac=', err)
         return {status:500, msg: err} 
-    }
+    } 
 }
 
 
@@ -67,14 +71,16 @@ exports.getAllPayers= async() => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            await client.end();
             return {status:200, msg: result.rows}
         } else {
+            await client.end();
             return {status:404, msg: 'No Payers found'} 
         }
     } catch(err) {
         console.log('errac=', err)
         return {status:500, msg: err} 
-    }
+    } 
 }
 
 
@@ -93,14 +99,16 @@ exports.fetchCertificateDetails = async(email) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            await client.end();
             return {status:200, msg: result.rows}
         } else {
+            await client.end();
             return {status:404, msg: 'Email does not exist'} 
         }
     } catch(err) {
         console.log('errac=', err)
         return {status:500, msg: err} 
-    }
+    } 
 
 }
 
@@ -144,6 +152,7 @@ exports.certificateSubmission  = async(tblcert) => {
         const certUpdate = await client.query(updateQuery, values);
         await client.query('COMMIT');
         console.log('Transaction committed successfully.');
+        await client.end();
         return {'status':200, 'data':{'certificate':certIngest , 'adminResponse':certUpdate}} 
     }
     catch(err) {
@@ -153,7 +162,7 @@ exports.certificateSubmission  = async(tblcert) => {
         // }
         console.log('Transaction rolled back.')
         return {status:500, data:err}
-    }
+    } 
 
 
 }
@@ -169,14 +178,16 @@ exports.getCertificateByPayerId = async(payer_id) => {
         // Check if rows were affected
         //console.log('result=', result)
         if(result.rows.length > 0) {
+            await client.end();
             return {status:200, msg: result.rows}
         } else {
+            await client.end();
             return {status:404, msg: 'No Payers found'} 
         }
     } catch(err) {
         console.log('errac=', err)
         return {status:500, msg: err} 
-    }
+    } 
 
 }
 
@@ -186,17 +197,18 @@ exports.updateValidation = async(verified, payer_id, cert_type) => {
     const values = [verified, payer_id, cert_type]
     const client  = await dbClient.getDbClient()
     try{
-        client.connect();
+        await client.connect();
         // Begin the transaction
         await client.query('BEGIN'); 
         console.log('Transaction started.')
         const certUpdate = await client.query(updateQuery, values);
         await client.query('COMMIT');
         console.log('Transaction committed successfully.');
+        await client.end();
         return {'status':200, 'data':certUpdate}
     }
     catch(err) {
         console.log('Transaction rolled back.',err)
         return {status:500, data:err}
-    }
+    } 
 }

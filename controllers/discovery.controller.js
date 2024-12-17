@@ -257,7 +257,7 @@ exports.payerConnectNewPayer = async(req, res, next) => {
             let npid_clientsidevalidation = await newPayerSideValidation(npid, opid)
             if(npid_clientsidevalidation.msg == '' && npid_clientsidevalidation.verified) {
                 await discovery_model.payerConnect(npid,opid,true, false, 'inprogress', 'Client Side validation Complete')
-                //await sendEmailToOldPayer(npid, npname, nemail, opid);
+                await sendEmailToOldPayer(npid, npname, nemail, opid);
                 res.json(returndata(200, 'Client Side validation Complete', 'Client Side Validation Sucessfull'));
             } else {
                 //await discovery_model.payerConnect(npid,opid,false, false, 'not-done', 'Client Side validation In-complete')
