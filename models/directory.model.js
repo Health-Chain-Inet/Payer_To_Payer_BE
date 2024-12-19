@@ -83,6 +83,32 @@ exports.getAllPayers= async() => {
     } 
 }
 
+exports.getAllPayersNotInConnect= async(payer_id) => {
+
+    const client  = await dbClient.getDbClient()
+    try {
+        let query = "select p.*, a.*, (select count(*) from certificates where payer_id=p.payer_id and "
+        query +=  " certificate_verified='true') as certificates_verified_count "
+        query += " from payer_details as p left join administrators as a"
+        query +=  " on p.payer_id = a.payer_id where a.active=$1"
+        const values = [true]
+        client.connect()
+        const result = await client.query(query, values);
+        // Check if rows were affected
+        //console.log('result=', result)
+        if(result.rows.length > 0) {
+            await client.end();
+            return {status:200, msg: result.rows}
+        } else {
+            await client.end();
+            return {status:404, msg: 'No Payers found'} 
+        }
+    } catch(err) {
+        console.log('errac=', err)
+        return {status:500, msg: err} 
+    } 
+}
+
 
 exports.fetchCertificateDetails = async(email) => {
     const client  = await dbClient.getDbClient()
