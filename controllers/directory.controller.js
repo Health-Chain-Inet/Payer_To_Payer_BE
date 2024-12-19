@@ -294,6 +294,10 @@ exports.fetchPayers = async (req, res,next) => {
 }
 
 
+
+
+
+
 exports.fetchAllPayers = async(req, res,next) => {
   try {
     let payers  = await directory_model.getAllPayers();
