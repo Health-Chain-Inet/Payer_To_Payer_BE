@@ -1,6 +1,7 @@
 const fs = require('fs');
-
+const directory_model = require('../models/directory.model');
 const forge = require('node-forge');
+const { validate } = require('uuid');
 const projectRoot = process.cwd();
 
 // Load the CA's private key and certificate
@@ -23,14 +24,16 @@ function returndata(status, msg, data){
      
 }
 
+
+
 exports.createClientCertificate = async(req, res, next) => {
-    const { private_key, csr, payer_id } = req.body;
+    const { private_key, csr, payer_id, email } = req.body;
 
     if (!private_key || !csr || !payer_id) {
         return returndata(400,'Private Key and CSR  are required.','Bad Request')
     } else {
         try {
-            // Convert private key and CSR from PEM to forge format
+            //Convert private key and CSR from PEM to forge format
             const privateKeyForge = forge.pki.privateKeyFromPem(private_key);
             const csrForge = forge.pki.certificationRequestFromPem(csr);
             // Check if the CSR is valid
@@ -60,7 +63,8 @@ exports.createClientCertificate = async(req, res, next) => {
                   digitalSignature: true
                 },
               ]);
-              clientCert.validFrom = new Date();
+              validFrom = new Date()
+              clientCert.validFrom = validFrom;
               let validTo = new Date();
               validTo.setFullYear(validTo.getFullYear() + 1);
               clientCert.validTo = validTo.toISOString();
@@ -81,13 +85,28 @@ exports.createClientCertificate = async(req, res, next) => {
               fs.writeFileSync(clientCertfilePath,clientCertPem);
               fs.writeFileSync(clientKeyfilePath, private_key);
 
-              res.json(returndata(200,'success',{ client_certificate_pen:  clientCertPem }));
+              try {
+                let payerdet = await directory_model.getPayerByEmail(email)
+                if(payerdet.status == 200)    {          
+                      await directory_model.certificateSubmission(payerdet.msg, validFrom, validTo, 'client','','' )
+                      res.json(returndata(200,'success',{ client_certificate_pen:  clientCertPem }));
+                } else {
+                    res.json(returndata(500,'failed',{ client_certificate_pen:  '' }));
+                }
+              } catch(err) {
+                res.json(returndata(500,'failed',{ client_certificate_pen:  '' }));
+              }
+
+
+
          } catch(error) {
             console.log(error)
             res.json(returndata(500, 'Error', (error.message)?error.message:error));
          }
     }
   
+
+    
   
 
 
@@ -164,10 +183,10 @@ exports.createServerCertificate = async(req, res, next) => {
 
 exports.downloadIntermediate = async(req, res, next) => {
   try {
-    res.json(returndata(200,'CA-Intermediate-Certificate',intermediateCert))
+    res.sendFile(intermediateCertPath)
   }
   catch(err) {
-    res.json(returndata(500,'error', err.message))
+    res.sendFile(err.message)
   }
     
 }

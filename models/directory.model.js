@@ -139,7 +139,7 @@ exports.fetchCertificateDetails = async(email) => {
 }
 
 
-exports.certificateSubmission  = async(tblcert) => {
+exports.certificateSubmissionOld  = async(tblcert) => {
     let payer_id = tblcert.payer_id;
     let adm_id = tblcert.adm_id;
     let email = tblcert.adm_email;
@@ -153,6 +153,58 @@ exports.certificateSubmission  = async(tblcert) => {
     let certificate_uploaded_adm = (cert_type == 'client')?false: true;
     let org_id = (cert_type == 'client')?'': tblcert.org_id;
     let endpoint_id = (cert_type == 'client')?'': tblcert.endpoint_id;
+
+    let certquery = "";
+    certquery += "insert into Certificates(payer_id, adm_id, email, validity_notbefore,validity_notafter, created_date, "
+    certquery += " certificate_uploaded, certificate_verified, cert_type, org_id, endp_id) "
+    certquery += "values('"+payer_id+"','"+adm_id+"','"+email+"','"+validity_notbefore+"','"+validity_notafter+"','"+created_date+"',"
+    certquery += "'"+certificate_uploaded+"','"+certificate_verified+"','"+cert_type+"','"+org_id+"','"+endpoint_id+"') ";
+    certquery += " ON CONFLICT (payer_id, adm_id, cert_type) "
+    certquery += " DO update  SET validity_notbefore =  '"+validity_notbefore+"',"
+    certquery += " validity_notafter = '"+validity_notafter+"', updated_date = '"+created_date+"'"
+    //certquery +=  " where payer_id='"+payer_id+"', adm_id='"+adm_id+"', cert_type='"+cert_type+"'"
+    console.log('certquery=', certquery);
+
+    let updateQuery = "";
+    updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
+    const values = [certificate_uploaded_adm, adm_id, payer_id]
+    const client  = await dbClient.getDbClient()
+    try {
+        client.connect();
+        // Begin the transaction
+        await client.query('BEGIN'); 
+        console.log('Transaction started.')
+        const certIngest =  await client.query(certquery);
+        const certUpdate = await client.query(updateQuery, values);
+        await client.query('COMMIT');
+        console.log('Transaction committed successfully.');
+        await client.end();
+        return {'status':200, 'data':{'certificate':certIngest , 'adminResponse':certUpdate}} 
+    }
+    catch(err) {
+        console.error('Error occurred during transaction:', err)
+        // if(client) {
+        //     await client.query('ROLLBACK')
+        // }
+        console.log('Transaction rolled back.')
+        return {status:500, data:err}
+    } 
+
+
+}
+
+
+exports.certificateSubmission  = async(tblcert, validFrom, ValidTo, cert_type, org_id, endpoint_id) => {
+    let payer_id = tblcert.payer_id;
+    let adm_id = tblcert.adm_id;
+    let email = tblcert.adm_email;
+    let validity_notbefore = validFrom;
+    let validity_notafter = ValidTo;
+    let created_date = Date.now().toString();
+    let certificate_uploaded = true; 
+    let certificate_verified = false; 
+    let certificate_uploaded_adm = (cert_type == 'client')?false: true;
+
 
     let certquery = "";
     certquery += "insert into Certificates(payer_id, adm_id, email, validity_notbefore,validity_notafter, created_date, "
