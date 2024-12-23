@@ -14,7 +14,8 @@ exports.getDbClient = async() =>  {
         ssl: { rejectUnauthorized: false }, // Ensuring SSL is enabled correctly in production
         max: 20, // Number of connections in the pool (adjust as necessary)
         idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-        connectionTimeoutMillis: 2000, // Timeout for acquiring a connection from the pool
+        connectionTimeoutMillis: 10000, // Timeout for acquiring a connection from the pool
+        statement_timeout: 30000         // Increase query timeout to 30 seconds
     });
 
     return client

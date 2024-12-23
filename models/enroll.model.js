@@ -44,7 +44,7 @@ function hashing(pass) {
 }
 
 async function fetchPayerTableQuery(payer) {
-  let orgName = (typeof payer.payer_name != 'undefined')?payer.payer_name:'' 
+  let orgName = (typeof payer.payer_name != 'undefined')?payer.organization_name:'' 
   let payer_id = "P"+generateUUIDWithLength(orgName, 5);
   //let payer_id =  generatedUUID
   console.log('id=',payer_id)
@@ -68,16 +68,16 @@ async function fetchPayerTableQuery(payer) {
 }
 
 async function fetchAdminTableQuery(payer, payer_id) {
-  let admName = payer.adm_name 
+  let admName = payer.admin_name 
   let admId = "A"+generateUUIDWithLength(admName, 5)
-  let admPhone = payer.adm_phone
-  let admEmail = payer.adm_email
-  let admpassCheck = await hashing(payer.adm_password);
+  let admPhone = payer.admin_phone
+  let admEmail = payer.admin_email
+  let admpassCheck = await hashing(payer.password);
   let admPassword = (admpassCheck.status==200)?admpassCheck.message:''
-  let orgEIN = payer.org_ein
-  let orgWebsite = payer.org_website
-  let orgTerms = payer.org_terms
-  let orgPrivacypolicyLink = payer.privacy_policy  
+  let orgEIN =  '' //payer.org_ein
+  let orgWebsite =  '' //payer.org_website
+  let orgTerms =  '' //payer.org_terms
+  let orgPrivacypolicyLink = '' //payer.privacy_policy  
   let active = false
   let certificateUploaded = false
   let certificateVerified = false

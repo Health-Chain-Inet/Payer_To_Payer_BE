@@ -19,7 +19,11 @@ router.get('/validateserver', directoryController.validateServerCertificate)
 
 
 router.post('/clientCertificate', certificateController.createClientCertificate);
+router.post('/serverCertificate', certificateController.createServerCertificate);
 router.get('/downloadIntermediate', certificateController.downloadIntermediate);
+router.get('/downloadClientCert', certificateController.downloadClientCertificate);
+router.get('/downloadServerCert', certificateController.downloadClientCertificate);
+
 
 
 // router.post('/upload', directoryController.uploadCertificate)

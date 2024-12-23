@@ -16,7 +16,7 @@ exports.getPayerByEmail= async(email) => {
         client.connect()
         const result = await client.query(query, values);
         // Check if rows were affected
-        //console.log('result=', result)
+        console.log('result=', result)
         if(result.rows.length > 0) {
             await client.end();
             return {status:200, msg: result.rows[0]}
@@ -51,7 +51,7 @@ exports.getPayerByEmailWithCertificate= async(email) => {
             return {status:404, msg: 'Email does not exist'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('getPayerByEmailWithCertificate=', err)
         return {status:500, msg: err} 
     } 
 }
@@ -78,7 +78,7 @@ exports.getAllPayers= async() => {
             return {status:404, msg: 'No Payers found'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('getAllPayers=', err)
         return {status:500, msg: err} 
     } 
 }
@@ -104,7 +104,7 @@ exports.getAllPayersNotInConnect= async(payer_id) => {
             return {status:404, msg: 'No Payers found'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('getAllPayersNotInConnect=', err)
         return {status:500, msg: err} 
     } 
 }
@@ -119,7 +119,7 @@ exports.fetchCertificateDetails = async(email) => {
         query += ' where a.adm_email = $1'
         //console.log('query=', query);
         const values = [email]
-        client.connect()
+        await client.connect()
         const result = await client.query(query, values);
 
         // Check if rows were affected
@@ -132,7 +132,7 @@ exports.fetchCertificateDetails = async(email) => {
             return {status:404, msg: 'Email does not exist'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('fetchCertificateDetails=', err)
         return {status:500, msg: err} 
     } 
 
@@ -166,7 +166,7 @@ exports.certificateSubmissionOld  = async(tblcert) => {
     console.log('certquery=', certquery);
 
     let updateQuery = "";
-    updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
+    updateQuery = "update administrators set certificate_uploaded=$1, certificate_verified=$1 where adm_id=$2 and payer_id=$3"
     const values = [certificate_uploaded_adm, adm_id, payer_id]
     const client  = await dbClient.getDbClient()
     try {
@@ -263,7 +263,7 @@ exports.getCertificateByPayerId = async(payer_id) => {
             return {status:404, msg: 'No Payers found'} 
         }
     } catch(err) {
-        console.log('errac=', err)
+        console.log('getCertificateByPayerId=', err)
         return {status:500, msg: err} 
     } 
 
