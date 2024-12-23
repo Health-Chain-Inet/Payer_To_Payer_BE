@@ -27,6 +27,8 @@ const { Worker } = require('worker_threads')
 exports.activate = async(actId, key) => {
   try {
     let result = await activatePayer(actId, key)  
+    console.log('result2= ',result)
+
     if(result ==  1) {
         return 1;
     } else {
@@ -34,6 +36,7 @@ exports.activate = async(actId, key) => {
     }
   }
   catch(err) {
+    console.log('err=', err);
     return 0;
   }
 }
@@ -47,7 +50,7 @@ async function activatePayer(actId, key) {
         const values = [true, actId, key]
         await client.connect()
         const result = await client.query(query, values);
-        // console.log('result= ',result)
+        console.log('result= ',result.rowCount)
         // Check if rows were affected
         if (result.rowCount > 0) {
             return 1
@@ -58,7 +61,7 @@ async function activatePayer(actId, key) {
         console.log('errac=', err)
         return 0
     } finally {
-        client.close();
+        client.end();
     }
 }
     
@@ -74,7 +77,7 @@ async function checkActivation(actId, key) {
       const result = await client.query(query, values);
       return result.rows; // Return the data fetched
     } catch(err) {
-        throw new Error(`Error fetching data: ${error.message}`);
+        throw new Error(`Error fetching data: ${err.message}`);
     } finally {
         client.close()
     }

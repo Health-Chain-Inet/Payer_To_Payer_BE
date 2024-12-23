@@ -5,7 +5,7 @@ exports.activation = async(req, res,next) => {
     let key = req.query.key
     let actId = req.query.actId
     let activation = await activate.activate(actId,key)
-    console.log('actvation=',activation)
+    console.log('activation=',activation)
     if(activation == 1) {
         return res.status(200).json({
             success: true,
