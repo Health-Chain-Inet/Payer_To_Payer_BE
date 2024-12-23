@@ -82,6 +82,51 @@ exports.enrollPayer = async (req, res, next) => {
 
 }
 
+exports.payerEndpoints = async(req, res, next) => {
+ const {payer_id, adm_id, endpoint_name, base_url, auth_scope, auth_params_json, authorize_url, token_url, 
+  return_url, auth_type, payer_env, inserted_by} = req.body;  
+  return res.status(200).json({
+    status: 200,
+    message: "Payer data",
+    data: "Payer data",
+  });
+}
+
+exports.allPayers = async(req, res, next) => {
+  const ps = await enroll.getAllPayers();
+  if(ps.status == 200) {
+    return res.status(200).json({
+      status: 200,
+      message: "All Payers",
+      data: ps.msg
+    });
+  } else {
+    return res.status(404).json({
+      status: 404,
+      message: "No Payers",
+      data: []
+    });
+  }
+} 
+
+exports.allAdmins = async(req, res, next) => {
+  const ads = await enroll.getAllAdmins();
+  if(ads.status == 200) {
+    return res.status(200).json({
+      status: 200,
+      message: "All Admins",
+      data: ads.msg
+    });
+  } else {
+    return res.status(404).json({
+      status: 404,
+      message: "No Admins",
+      data: []
+    });
+  }
+} 
+
+
 function payerValidation(payer) {
   let msg = '';
   msg += (payer.orgName == '') ? 'organization name is required and should be valid' : ''

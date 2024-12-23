@@ -134,3 +134,48 @@ exports.enroll = async(payer) => {
     }
 }
 
+
+exports.getAllPayers =  async _ => {
+      const client  = await dbClient.getDbClient()
+      try {
+          let query = "select payer_id, payer_name from payer_details"
+          client.connect()
+          const result = await client.query(query);
+          // Check if rows were affected
+          console.log('result=', result.rows)
+          if(result.rows.length > 0) {
+              await client.end();
+              return {status:200, msg: result.rows}
+          } else {
+              await client.end();
+              return {status:404, msg: 'No Payers found'} 
+          }
+      } catch(err) {
+          console.log('getAllPayers=', err)
+          return {status:500, msg: err} 
+      } 
+}
+
+exports.getAllAdmins =  async _ => {
+  const client  = await dbClient.getDbClient()
+  try {
+      let query = "select adm_id, adm_name from administrators"
+      client.connect()
+      const result = await client.query(query);
+      // Check if rows were affected
+      //console.log('result=', result)
+      if(result.rows.length > 0) {
+          await client.end();
+          return {status:200, msg: result.rows}
+      } else {
+          await client.end();
+          return {status:404, msg: 'No admins found'} 
+      }
+  } catch(err) {
+      console.log('admins=', err)
+      return {status:500, msg: err} 
+  } 
+}
+
+
+
