@@ -55,7 +55,7 @@ exports.enrollPayer = async (req, res, next) => {
       let enrollResponse = await enroll.enroll(payer)
       if (enrollResponse.status == 200) {
         let enrollAdminData = enrollResponse.data.adminResponse.rows[0]
-        await sendEnrollerEmail(enrollAdminData)
+        //await sendEnrollerEmail(enrollAdminData)
   
         return res.status(200).json({
           success: true,
@@ -82,14 +82,41 @@ exports.enrollPayer = async (req, res, next) => {
 
 }
 
-exports.payerEndpoints = async(req, res, next) => {
- const {payer_id, adm_id, endpoint_name, base_url, auth_scope, auth_params_json, authorize_url, token_url, 
-  return_url, auth_type, payer_env, inserted_by} = req.body;  
-  return res.status(200).json({
-    status: 200,
-    message: "Payer data",
-    data: "Payer data",
-  });
+exports.endpointIngestion = async(req, res, next) => {
+  // const {payer_id, payer_name, email, endpoint_name, base_url, auth_scope, 
+  // authorize_url, token_url, return_url, auth_type} = req.body;
+  console.log('body=', req.body)
+  const body = req.body
+  console.log('body2=', body)
+
+  
+  let endpointValid = payerEndpointValidation(body);
+
+  if(endpointValid.success) {
+    try {
+      let endpointIngestResponse = await enroll.addPayerEndpoint(body);
+      return res.status(200).json({
+        status: 200,
+        message: "Payer data",
+        data: endpointIngestResponse,
+      });
+    } catch(err) {
+      console.log(err);
+      return res.status(500).json({
+        status: 500,
+        message: "Error in Payer Data Ingestion",
+        data: err.message,
+      });
+    }
+  } else {
+    return res.status(400).json({
+      status: 400,
+      message: "Validation Error",
+      data: endpointValid.data,
+    });
+  }
+
+
 }
 
 exports.allPayers = async(req, res, next) => {
@@ -124,8 +151,56 @@ exports.allAdmins = async(req, res, next) => {
       data: []
     });
   }
-} 
+}
 
+exports.endpoints = async(req, res, next) => {
+  try {
+    const payerId = req.query.payerId;
+    const endps = await enroll.fetchendpoints(payerId);
+    return res.status(200).json({
+      status: 200,
+      message: "success",
+      data: endps.msg,
+    });
+  }
+  catch(err) {
+    return res.status(400).json({
+      status: 400,
+      message: " Error",
+      data: err.message,
+    });
+  }
+}
+
+function payerEndpointValidation(endp) {
+  let msg = '';
+  console.log('endp=',endp.payerName)
+  msg += (endp.payerId == '' || typeof endp.payerId == 'undefined') ? 'payer id is missing,' : ''
+  msg += (endp.payerName == '' || typeof endp.payerName == 'undefined') ? 'payer name is missing,' : ''
+  msg += (endp.email == '' || typeof endp.email == 'undefined') ? 'email is missing,' : ''
+  msg += (endp.baseUrl == '' || typeof endp.baseUrl == 'undefined') ? 'email is missing,' : ''
+  msg += (endp.endpointName == '' || typeof endp.endpointName == 'undefined') ? 'endpoint name is missing,' : ''
+  msg += (endp.authScope == '' || typeof endp.authScope == 'undefined') ? 'auth scope is missing,' : ''
+  msg += (endp.authorizeUrl == '' || typeof endp.authorizeUrl == 'undefined') ? 'authorize url is missing,' : ''
+  msg += (endp.tokenUrl == '' || typeof endp.tokenUrl == 'undefined') ? 'token url is missing,' : ''
+  msg += (endp.returnUrl == '' || typeof endp.returnUrl == 'undefined') ? 'return url is missing,' : ''
+  msg += (endp.authType == '' || typeof endp.authType == 'undefined') ? 'auth type is missing,' : ''
+
+
+  if (msg == '') {
+    return {
+      'success': true,
+      'data': 'Payer Validated Successfully'
+    }
+  } else {
+    return {
+      'success': false,
+      'data': msg
+    }
+  }
+
+
+}
 
 function payerValidation(payer) {
   let msg = '';

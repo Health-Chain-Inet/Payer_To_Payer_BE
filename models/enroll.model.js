@@ -44,7 +44,7 @@ function hashing(pass) {
 }
 
 async function fetchPayerTableQuery(payer) {
-  let orgName = (typeof payer.payer_name != 'undefined')?payer.organization_name:'' 
+  let orgName = (typeof payer.organization_name != 'undefined')?payer.organization_name:'' 
   let payer_id = "P"+generateUUIDWithLength(orgName, 5);
   //let payer_id =  generatedUUID
   console.log('id=',payer_id)
@@ -94,7 +94,7 @@ async function fetchAdminTableQuery(payer, payer_id) {
     query += "'"+orgEIN+ "', '"+orgWebsite+"', '"+orgTerms+"','"+orgPrivacypolicyLink+"','"+createdDate+"',", 
     query += "" + active + "," + certificateUploaded + "," + certificateVerified + ",'"+activationToken+"') RETURNING *"
     return query; 
-  }
+}
 
   
 exports.enroll = async(payer) => {
@@ -132,6 +132,37 @@ exports.enroll = async(payer) => {
         //     await client.end()
         // }
     }
+}
+
+exports.addPayerEndpoint  = async(endp) => {
+  const client  = await dbClient.getDbClient()
+  try {
+      let created_date = Date.now().toString();
+      let inserted_by = 'admin';
+      let payer_env = 'sandbox';
+      client.connect()
+      let query = "INSERT INTO endpoints(payer_id,adm_email, endpoint_name, base_url,auth_scope, "
+      query += "authorize_url, token_url,return_url,auth_type, payer_env, inserted_by, created_date) values("
+      query += "'"+endp.payerId+"','"+endp.email+"','"+endp.endpointName+"','"+endp.baseUrl+"',"
+      query += "'"+endp.authScope+"','"+endp.authorizeUrl+"','"+endp.tokenUrl+"','"+endp.returnUrl+"',"
+      query += "'"+endp.authType+"','"+payer_env+"','"+inserted_by+"','"+created_date+"')"
+      // Begin the transaction
+      await client.query('BEGIN')
+      console.log('Transaction started.')
+      const endpResponse = await client.query(query)
+      await client.query('COMMIT');
+      console.log('Transaction committed successfully.');
+      //return adminResponse
+       return {'status':200, 'data':endpResponse} 
+      
+  } catch(err) {
+      // If any error occurs, rollback the transaction
+      console.error('Error occurred during transaction:', err.message)
+      console.log('Transaction rolled back.')
+      return {status:500, data:err}
+  } finally {
+      client.end();
+  }
 }
 
 
@@ -173,6 +204,27 @@ exports.getAllAdmins =  async _ => {
       }
   } catch(err) {
       console.log('admins=', err)
+      return {status:500, msg: err} 
+  } 
+}
+
+exports.fetchendpoints = async(payer_id) => {
+  const client  = await dbClient.getDbClient()
+  try {
+      let query = "select * from endpoints where payer_id = '" + payer_id + "'";
+      client.connect()
+      const result = await client.query(query);
+      // Check if rows were affected
+      //console.log('result=', result)
+      if(result.rows.length > 0) {
+          await client.end();
+          return {status:200, msg: result.rows[0]}
+      } else {
+          await client.end();
+          return {status:404, msg: 'No endpoints found'} 
+      }
+  } catch(err) {
+      console.log('endpoints=', err)
       return {status:500, msg: err} 
   } 
 }
