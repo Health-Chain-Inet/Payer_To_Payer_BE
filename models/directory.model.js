@@ -6,7 +6,7 @@ const dbClient = require('../config/dbClient')
 
 
 
-exports.getPayerByEmail= async(email) => {
+exports.getPayerByEmail = async(email) => {
 
     const client  = await dbClient.getDbClient()
     try {
@@ -189,8 +189,6 @@ exports.certificateSubmissionOld  = async(tblcert) => {
         console.log('Transaction rolled back.')
         return {status:500, data:err}
     } 
-
-
 }
 
 
@@ -219,6 +217,10 @@ exports.certificateSubmission  = async(tblcert, validFrom, ValidTo, cert_type, o
 
     let updateQuery = "";
     updateQuery = "update administrators set certificate_uploaded=$1 where adm_id=$2 and payer_id=$3"
+    if(cert_type == 'server') {
+        updateQuery = "update administrators set certificate_uploaded=$1, certificate_verified=$1 where adm_id=$2 and payer_id=$3"
+
+    } 
     const values = [certificate_uploaded_adm, adm_id, payer_id]
     const client  = await dbClient.getDbClient()
     try {

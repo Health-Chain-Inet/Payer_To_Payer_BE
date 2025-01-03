@@ -10,12 +10,12 @@ const moment = require('moment-timezone');
 
 
 // Load the CA's private key and certificate
-const caCertPath = projectRoot + '\\certs\\root-ca-cert.pem';
-const caPrivateKeyPath =  projectRoot + '\\certs\\root-ca-key.pem';
+const caCertPath = projectRoot + '\\certs\\rootCA.pem';
+const caPrivateKeyPath =  projectRoot + '\\certs\\rootCA-key.pem';
 
 // Load intermediate certificates (if any)
-const intermediateCertPath = projectRoot + '\\certs\\intermediate-ca-cert.pem'; // Adjust this path as necessary
-const intermediateKeyPath = projectRoot + '\\certs\\intermediate-ca-key.pem'; // Adjust this path as necessary
+const intermediateCertPath = projectRoot + '\\certs\\intermediateCA.pem'; // Adjust this path as necessary
+const intermediateKeyPath = projectRoot + '\\certs\\intermediateCA-key.pem'; // Adjust this path as necessary
 
 let caCert = fs.readFileSync(caCertPath, 'utf8');
 let caPrivateKey = fs.readFileSync(caPrivateKeyPath, 'utf8');
@@ -34,6 +34,7 @@ function returndata(status, msg, data){
 }
 
 
+
 exports.createClientCertificate = async(req, res, next) => {
     const { private_key, csr, payer_id, email } = req.body;
 
@@ -41,68 +42,70 @@ exports.createClientCertificate = async(req, res, next) => {
         return returndata(400,'Private Key and CSR  are required.','Bad Request')
     } else {
         try {
-            console.log('a')
-            //Convert private key and CSR from PEM to forge format
-            const privateKeyForge = forge.pki.privateKeyFromPem(private_key);
-            const csrForge = forge.pki.certificationRequestFromPem(csr);
-            console.log('b')
-            // Check if the CSR is valid
-            if (!csrForge.verify()) {
-                return returndata(400,'CSR is invalid.','Bad Request')
-            }
-            console.log('c')
-            // Load the CA certificate, intermediate certificate, and private key into forge format
-            const caCertForge = forge.pki.certificateFromPem(caCert);
-            console.log('c1')
-            const caPrivateKeyForge = forge.pki.privateKeyFromPem(caPrivateKey);
-            console.log('d')
-            const intermediateCertForge = forge.pki.certificateFromPem(intermediateCert);
-            console.log('e')
-            const intermediateKeyForge = forge.pki.privateKeyFromPem(intermediateKey);
-            console.log('f')
-         
-            // Create the client certificate
-            const clientCert = forge.pki.createCertificate();
-            clientCert.serialNumber = Math.floor(Math.random() * 1e6).toString(); // Random serial number
-            clientCert.publicKey = csrForge.publicKey;
-            clientCert.setSubject(csrForge.subject.attributes);
-            console.log(1)
-            clientCert.setIssuer(intermediateCertForge.subject.attributes);
-            console.log(2)
-            clientCert.setExtensions([
-                {
-                  name: 'basicConstraints',
-                  cA: false
-                },
-                {
-                  name: 'keyUsage',
-                  keyCertSign: false,
-                  digitalSignature: true
-                },
-              ]);
-              validFrom = new Date()
-              clientCert.validFrom = validFrom;
-              let validTo = new Date();
-              validTo.setFullYear(validTo.getFullYear() + 1);
-              clientCert.validTo = validTo.toISOString();
-              console.log(3)
-              // Sign the certificate with CA's private key
-              clientCert.sign(intermediateKeyForge);
-              console.log(4)
-              // Convert the signed certificate to PEM format
-              const clientCertPem = forge.pki.certificateToPem(clientCert);
-              console.log(clientCertPem)
-              console.log(5)
-              !fs.existsSync(projectRoot + '\\uploads\\' + payer_id) && fs.mkdirSync(projectRoot + '\\uploads\\' + payer_id);
-              const clientCertfilePath = projectRoot + '\\uploads\\'+payer_id+'\\client-cert-'+payer_id+'.pem';
-              const clientKeyfilePath = projectRoot + '\\uploads\\'+payer_id+'\\client-private-key-'+payer_id+'.pem';
-              console.log('CertfilePath=', clientCertfilePath)
-              console.log('KeyfilePath=', clientKeyfilePath)
-              console.log(6)
+          console.log(1);
+          // 1. Convert private key and CSR from PEM to forge format
+          //const privateKeyForge = forge.pki.privateKeyFromPem(private_key);
+          const csrForge = forge.pki.certificationRequestFromPem(csr);
+          console.log(2);
+          // 2. Validate the CSR
+          if (!csrForge.verify()) {
+              return returndata(400, 'CSR is invalid.', 'Bad Request');
+          }
+          console.log(3);
+          // 3. Load the CA certificate and intermediate certificate into forge format
+          const caCertForge = forge.pki.certificateFromPem(caCert);
+          console.log('3a');
+          const caPrivateKeyForge = forge.pki.privateKeyFromPem(caPrivateKey);
+          console.log('3b');
+          const intermediateCertForge = forge.pki.certificateFromPem(intermediateCert);
+          console.log('3c');
+          const intermediateKeyForge = forge.pki.privateKeyFromPem(intermediateKey);
+          console.log(4);
+          // 4. Create the client certificate
+          const clientCert = forge.pki.createCertificate();
+          clientCert.serialNumber = Math.floor(Math.random() * 1e6).toString();  // Random serial number
+          clientCert.publicKey = csrForge.publicKey;
+          clientCert.setSubject(csrForge.subject.attributes);
+          clientCert.setIssuer(intermediateCertForge.subject.attributes);
+          console.log(5);
+          // Define extensions for the certificate
+          const extensions = [
+              { name: 'basicConstraints', critical: true, cA: false },
+              { name: 'keyUsage', critical: true, digitalSignature: true, keyEncipherment: true },
+              { name: 'extKeyUsage', critical: true, clientAuth: true },
+              { name: 'subjectKeyIdentifier' },
+              { name: 'authorityKeyIdentifier', keyIdentifier: forge.util.bytesToHex(forge.md.sha256.create().update(
+                  forge.asn1.toDer(forge.pki.publicKeyToAsn1(intermediateCertForge.publicKey)).getBytes()
+              )) },
+              { name: 'subjectAltName', altNames: [{ type: 2, value: 'localhost' }] }
+          ];
+          clientCert.setExtensions(extensions);
+          console.log(6);
+          clientCert.validity.notBefore = new Date();
+          clientCert.validity.notAfter = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
-              //let verified = await validateCertificate(clientCertPem, intermediateCertForge)
-              let verified = intermediateCertForge.verify(clientCert);
-              console.log('verified=', verified);
+          validFrom = new Date();
+          validTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+          console.log(7);
+
+          // 6. Sign the certificate with the CA's private key
+          clientCert.sign(intermediateKeyForge, forge.md.sha256.create());
+
+          console.log(8);
+          // 7. Convert the signed certificate to PEM format
+          const clientCertPem = forge.pki.certificateToPem(clientCert);
+          console.log(clientCertPem);
+
+          // Optionally, save the cert and key to files (for example purposes)
+          !fs.existsSync(projectRoot + '\\uploads\\' + payer_id) && fs.mkdirSync(projectRoot + '\\uploads\\' + payer_id);
+          const clientCertfilePath = projectRoot + '\\uploads\\' + payer_id + '\\client-cert-' + payer_id + '.pem';
+          const clientKeyfilePath = projectRoot + '\\uploads\\' + payer_id + '\\client-private-key-' + payer_id + '.pem';
+          // console.log('CertfilePath=', clientCertfilePath);
+          // console.log('KeyfilePath=', clientKeyfilePath);
+
+          // 8. Verify the certificate (optional)
+          let verified = intermediateCertForge.verify(clientCert);
+          console.log('verified=', verified);
               
 
               if(verified) {
@@ -112,8 +115,11 @@ exports.createClientCertificate = async(req, res, next) => {
 
                 try {
                   let payerdet = await directory_model.getPayerByEmail(email)
-                  if(payerdet.status == 200)    {          
+
+                  if(payerdet.status == 200)    {     
+                        console.log('certificate subission started')     
                         await directory_model.certificateSubmission(payerdet.msg, validFrom, validTo, 'client','','' )
+                        console.log('certificate subission ended')    
                         res.json(returndata(200,'success',{ client_certificate_pen:  clientCertPem }));
                   } else {
                       res.json(returndata(500,'failed',{ client_certificate_pen:  '' }));
@@ -179,23 +185,25 @@ exports.createServerCertificate = async(req, res, next) => {
             // Set the issuer to the intermediate certificate instead of the root CA certificate
             serverCert.setIssuer(intermediateCertForge.subject.attributes);
             console.log(6);
-            serverCert.setExtensions([
-                {
-                    name: 'basicConstraints',
-                    cA: false
-                },
-                {
-                    name: 'keyUsage',
-                    keyCertSign: false,
-                    digitalSignature: true
-                },
-            ]);
+            // Define extensions for the certificate
+            const extensions = [
+              { name: 'basicConstraints', critical: true, cA: false },
+              { name: 'keyUsage', critical: true, digitalSignature: true, keyEncipherment: true },
+              { name: 'extKeyUsage', critical: true, serverAuth: true },
+              { name: 'subjectKeyIdentifier' },
+              { name: 'authorityKeyIdentifier', keyIdentifier: forge.util.bytesToHex(forge.md.sha256.create().update(
+                  forge.asn1.toDer(forge.pki.publicKeyToAsn1(intermediateCertForge.publicKey)).getBytes()
+              )) },
+              { name: 'subjectAltName', altNames: [{ type: 2, value: 'localhost' }] }
+            ];
+            serverCert.setExtensions(extensions);
             console.log(7);
-            let validFrom = new Date()
-            serverCert.validFrom = validFrom;
-            let validTo = new Date();
-            validTo.setFullYear(validTo.getFullYear() + 1);
-            serverCert.validTo = validTo.toISOString();
+
+            clientCert.validity.notBefore = new Date();
+            clientCert.validity.notAfter = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  
+            validFrom = new Date();
+            validTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
             console.log(8);
             // Sign the certificate with intermediate certificate's private key
             serverCert.sign(intermediateKeyForge);
@@ -252,7 +260,6 @@ exports.createServerCertificate = async(req, res, next) => {
               }
 
 
-              res.json(returndata(200,'success',{ server_certificate_pen:  serverCertPem }));                
             } else {
               res.json(returndata(500,'failed',{ server_certificate_pen:  'Server Certificate validation failed' }));                
             }
@@ -285,7 +292,6 @@ exports.downloadClientCertificate = async(req, res, next) => {
   catch(err) {
     res.sendFile(err.message)
   }
-
 
 }
 
