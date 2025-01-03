@@ -158,7 +158,7 @@ exports.createServerCertificate = async(req, res, next) => {
         try {
             console.log(1);
             // Convert private key and CSR from PEM to forge format
-            const privateKeyForge = forge.pki.privateKeyFromPem(private_key);
+            //const privateKeyForge = forge.pki.privateKeyFromPem(private_key);
             const csrForge = forge.pki.certificationRequestFromPem(csr);
             console.log(2);
             // Check if the CSR is valid
@@ -206,7 +206,7 @@ exports.createServerCertificate = async(req, res, next) => {
             validTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
             console.log(8);
             // Sign the certificate with intermediate certificate's private key
-            serverCert.sign(intermediateKeyForge);
+            serverCert.sign(intermediateKeyForge, forge.md.sha256.create());
             console.log(9);
             // Convert the signed certificate to PEM format
             const serverCertPem = forge.pki.certificateToPem(serverCert);
@@ -250,7 +250,7 @@ exports.createServerCertificate = async(req, res, next) => {
                     res.json(returndata(500,'failed',{ server_certificate_pen:  'Error creating endpoint resource' }));                
                   }
                 } else {
-                  res.json(returndata(500,'failed',{ server_certificate_pen:  'Erro creating organization resource' }));                
+                  res.json(returndata(500,'failed',{ server_certificate_pen:  'Error creating organization resource' }));                
                 }
 
                 
