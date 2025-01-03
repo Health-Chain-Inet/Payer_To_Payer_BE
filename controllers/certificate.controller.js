@@ -199,8 +199,8 @@ exports.createServerCertificate = async(req, res, next) => {
             serverCert.setExtensions(extensions);
             console.log(7);
 
-            clientCert.validity.notBefore = new Date();
-            clientCert.validity.notAfter = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            serverCert.validity.notBefore = new Date();
+            serverCert.validity.notAfter = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
   
             validFrom = new Date();
             validTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
