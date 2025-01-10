@@ -292,3 +292,39 @@ exports.updateValidation = async(verified, payer_id, cert_type) => {
         return {status:500, data:err}
     } 
 }
+
+
+exports.clientregistration = async(clientds, payer_id, email) => {
+    const client  = await dbClient.getDbClient()
+    try {
+        const client_id = clientds.client_id;
+        const client_secret = clientds.client_secret;
+        const client_name = clientds.client_name;
+        const redirect_uris = clientds.redirect_uris;
+        const registration_access_token = clientds.registration_access_token;
+        const registration_client_uri = clientds.registration_client_uri;
+        const grant_types = clientds.grant_types;
+        const response_types = clientds.response_types;
+        const token_endpoint_auth_method = clientds.token_endpoint_auth_method;
+        const scope = clientds.scope;
+        const created_at = new Date().toISOString();
+        let query = `insert into client_registrations (payer_id, email, client_id, client_secret,client_name,redirect_uris, registration_access_token,` 
+        query += `registration_client_uri, grant_types, response_types, token_endpoint_auth_method, scope, created_at) `
+        query += `values ($1,$2,$3,$4,$5, $6, $7, $8, $9, $10, $11, $12, $13)`
+        const values = [payer_id, email, client_id, client_secret,client_name,redirect_uris, registration_access_token,registration_client_uri, grant_types, response_types, token_endpoint_auth_method, scope, created_at]
+        client.connect()
+        const result = await client.query(query, values);
+        // Check if rows were affected
+        console.log('result=', result)
+        if(result.rowCount > 0) {
+            await client.end();
+            return {status:200, msg: result.rows}
+        } else {
+            await client.end();
+            return {status:404, msg: 'No Payers found'} 
+        }
+    } catch(err) {
+        console.log('getCertificateByPayerId=', err)
+        return {status:500, msg: err} 
+    }
+}

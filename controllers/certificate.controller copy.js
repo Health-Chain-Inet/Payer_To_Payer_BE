@@ -7,7 +7,6 @@ const cf = require('../config/config.json')
 const axios = require('axios');
 const moment = require('moment-timezone');
 const Joi = require('joi');
-const crypto = require('crypto');
 
 
 
@@ -243,19 +242,13 @@ exports.createServerCertificate = async(req, res, next) => {
                   console.log(17);
                   if(endp.status == 200) {
                     console.log(18);
-                    const dcrpstatus = await dcrpRegsitration([msg.endpoint], payer_id, payer_id, email)
-                    console.log('dcrpstatus=',dcrpstatus);
-                    if(dcrpstatus.status == 200) {
-                      // Save the server certificate and private key to disk
-                      fs.writeFileSync(serverCertfilePath,serverCertPem);
-                      fs.writeFileSync(serverKeyfilePath, private_key);
-                      await directory_model.certificateSubmission(msg, validFrom, validTo, 'server','organization-'+payer_id,'endpoint-'+msg.payer_id )
-                      res.json(returndata(200,'success',{ server_certificate_pen:  serverCertPem }));
-                    } else {
-                      res.json(returndata(500,'failed',{ server_certificate_pen:  'Error in Dyanamic Client Registration ' }));                
-                    }
+                    // Save the server certificate and private key to disk
+                    fs.writeFileSync(serverCertfilePath,serverCertPem);
+                    fs.writeFileSync(serverKeyfilePath, private_key);
+                    await directory_model.certificateSubmission(msg, validFrom, validTo, 'server','organization-'+payer_id,'endpoint-'+msg.payer_id )
+                    res.json(returndata(200,'success',{ server_certificate_pen:  serverCertPem }));
                   } else {
-                    res.json(returndata(500,'failed',{ server_certificate_pen:  'Error creating Endpoint resource' }));                
+                    res.json(returndata(500,'failed',{ server_certificate_pen:  'Error creating endpoint resource' }));                
                   }
                 } else {
                   res.json(returndata(500,'failed',{ server_certificate_pen:  'Error creating organization resource' }));                
@@ -301,57 +294,9 @@ exports.downloadClientCertificate = async(req, res, next) => {
 
 }
 
-exports.register  = async(req, res, next) => {
-  
-  const payer_id = req.query.payer_id;
-  const email = req.query.email;
-  const response = await dcrpRegsitration(req.body.redirect_uris, req.body.client_name, payer_id, email);
-  res.json(response);
-}
 
-// Validation schema for client registration
-const registrationSchema = Joi.object({
-  client_name: Joi.string().required(),
-  redirect_uris: Joi.array().items(Joi.string().uri()).min(1).required(),
-  grant_types: Joi.array().items(Joi.string()).default(['authorization_code']),
-  response_types: Joi.array().items(Joi.string()).default(['code']),
-  token_endpoint_auth_method: Joi.string().valid('client_secret_basic', 'client_secret_post').default('client_secret_basic'),
-  scope: Joi.string()
-});
+async function dcrpRegsitration(redirect_uris, client_name) {
 
-
-
-
-async function dcrpRegsitration(redirect_uris, client_name, payer_id, email) {
-  try {
-    const { error, value } = registrationSchema.validate({redirect_uris, client_name});
-    if (error) {
-      return {status : 400 , msg:error}; 
-    }
-    // Generate client credentials
-    const clientId = crypto.randomUUID();
-    const clientSecret = crypto.randomBytes(32).toString('hex');
-    const registrationAccessToken = crypto.randomBytes(32).toString('hex');
-
-    // Create client registration
-    const client = {
-      client_id: clientId,
-      client_secret: clientSecret,
-      registration_access_token: registrationAccessToken,
-      registration_client_uri: `http://localhost:3001/directory/register/${clientId}`,
-      ...value
-    };
-    let response = await directory_model.clientregistration(client, payer_id, email);   
-    console.log('dcrpresponse=', response);
-    if(response.status == 200) {
-      return {status : 200 , msg:'Client registered successfully'}; 
-    } else  {
-      return  {status : 500 , msg:'Error in client registration'}; ;
-    }
-  } catch (error) {
-    console.log('error=', error);
-    return {status : 500 , msg:error};
-  }
 }
 
 async function organizationCreator(msg) {
